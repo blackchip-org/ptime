@@ -14,7 +14,7 @@ Install with:
 
 ## Examples
 
-    ptime -l en-US Mon Jan 2 2006 15:04:05 MST
+    ptime -l en-US Mon Jan 2 2006 3:04:05pm MST
 
 Output:
 
@@ -24,15 +24,15 @@ Output:
   "Year": "2006",
   "Month": "jan",
   "Day": "2",
-  "Hours": "15",
+  "Hours": "3",
   "Minutes": "04",
   "Seconds": "05",
+  "Period": "p",
   "Zone": "mst",
   "Offset": "-0700",
   "DateSep": " ",
   "TimeSep": ":"
-}
-```
+}```
 
     ptime -l fr-FR lundi, 2/1/06 15:04:05,9999
 
