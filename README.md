@@ -32,7 +32,8 @@ Output:
   "Offset": "-0700",
   "DateSep": " ",
   "TimeSep": ":"
-}```
+}
+```
 
     ptime -l fr-FR lundi, 2/1/06 15:04:05,9999
 
