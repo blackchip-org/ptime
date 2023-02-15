@@ -28,7 +28,6 @@ func main() {
 	}
 
 	p := ptime.NewParser(l)
-	fmt.Printf("date: [%v]\n", text)
 	res, err := p.Parse(text)
 	if err != nil {
 		fmt.Println("error")
