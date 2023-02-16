@@ -10,20 +10,21 @@ import (
 )
 
 type Parsed struct {
-	Weekday     string `json:",omitempty"`
-	Year        string `json:",omitempty"`
-	Month       string `json:",omitempty"`
-	Day         string `json:",omitempty"`
-	OrdDay      string `json:",omitempty"`
-	Hours       string `json:",omitempty"`
-	Minutes     string `json:",omitempty"`
-	Seconds     string `json:",omitempty"`
-	FracSeconds string `json:",omitempty"`
-	Period      string `json:",omitempty"`
-	Zone        string `json:",omitempty"`
-	Offset      string `json:",omitempty"`
-	DateSep     string `json:",omitempty"`
-	TimeSep     string `json:",omitempty"`
+	Weekday    string `json:",omitempty"`
+	Year       string `json:",omitempty"`
+	Month      string `json:",omitempty"`
+	Day        string `json:",omitempty"`
+	OrdDay     string `json:",omitempty"`
+	Hour       string `json:",omitempty"`
+	Minute     string `json:",omitempty"`
+	Second     string `json:",omitempty"`
+	FracSecond string `json:",omitempty"`
+	Period     string `json:",omitempty"`
+	Zone       string `json:",omitempty"`
+	Offset     string `json:",omitempty"`
+	DateSep    string `json:",omitempty"`
+	TimeSep    string `json:",omitempty"`
+	HourSep    string `json:",omitempty"`
 }
 
 func (p Parsed) String() string {
@@ -124,7 +125,7 @@ func (p *Parser) parseText() error {
 		}
 	}
 	if p.state == ParsingTime {
-		if strings.Contains(p.TimeSep, p.tok.Val) {
+		if _, ok := p.TimeSep[p.tok.Val]; ok {
 			return nil
 		}
 		if _, ok := p.ZoneNames[p.tok.Val]; ok {
@@ -150,7 +151,8 @@ func (p *Parser) parseText() error {
 func (p *Parser) parseNumber() error {
 	if p.state == ParsingDate {
 		la := p.lookahead(1)
-		if la.Type == Indicator && strings.Contains(p.TimeSep, la.Val) {
+		_, isSep := p.TimeSep[la.Val]
+		if la.Type == Indicator && isSep {
 			p.changeState(ParsingTime)
 
 		} else {
@@ -168,7 +170,7 @@ func (p *Parser) parseNumberDate() error {
 	if sep == "" {
 		la := p.lookahead(1)
 		if la.Type == Indicator {
-			if strings.Contains(p.DateSep, la.Val) {
+			if _, ok := p.DateSep[la.Val]; ok {
 				sep = la.Val
 			}
 		} else {
@@ -184,14 +186,18 @@ func (p *Parser) parseNumberTime() error {
 	sep := p.parsed.TimeSep
 	if sep == "" {
 		la := p.lookahead(1)
-		p.trace("lookahead = '%v'", la.Val)
-		if strings.Contains(p.TimeSep, la.Val) {
-			sep = la.Val
-		} else {
-			sep = " "
+		if la.Val != "" {
+			p.trace("lookahead = '%v'", la.Val)
+			if _, ok := p.TimeSep[la.Val]; ok {
+				sep = la.Val
+			} else {
+				if _, ok := p.HourSep[la.Val]; !ok {
+					sep = " "
+				}
+			}
+			p.trace("TimeSep = '%v'", sep)
+			p.parsed.TimeSep = sep
 		}
-		p.trace("TimeSep = '%v'", sep)
-		p.parsed.TimeSep = sep
 	}
 	return p.parseTime()
 }
@@ -343,21 +349,21 @@ func (p *Parser) parseDay() error {
 }
 
 func (p *Parser) parseTime() error {
-	if p.parsed.Hours == "" {
-		return p.parseHours()
+	if p.parsed.Hour == "" {
+		return p.parseHour()
 	}
-	if p.parsed.Minutes == "" {
-		return p.parseMinutes()
+	if p.parsed.Minute == "" {
+		return p.parseMinute()
 	}
-	if p.parsed.Seconds == "" {
-		return p.parseSeconds()
+	if p.parsed.Second == "" {
+		return p.parseSecond()
 	}
 	return p.err("pass parseTime")
 }
 
-func (p *Parser) parseHours() error {
-	p.trace("is hours")
-	p.parsed.Hours = p.tok.Val
+func (p *Parser) parseHour() error {
+	p.trace("is hour")
+	p.parsed.Hour = p.tok.Val
 	h, err := strconv.Atoi(p.tok.Val)
 	if err != nil {
 		return p.err("invalid hours: %v", p.tok.Val)
@@ -365,12 +371,17 @@ func (p *Parser) parseHours() error {
 	if h < 0 || h >= 24 {
 		return p.err("invalid hours: %v", p.tok.Val)
 	}
+	la := p.lookahead(1)
+	if _, ok := p.HourSep[la.Val]; ok {
+		p.parsed.HourSep = la.Val
+		p.next()
+	}
 	return nil
 }
 
-func (p *Parser) parseMinutes() error {
-	p.trace("is minutes")
-	p.parsed.Minutes = p.tok.Val
+func (p *Parser) parseMinute() error {
+	p.trace("is minute")
+	p.parsed.Minute = p.tok.Val
 	m, err := strconv.Atoi(p.tok.Val)
 	if err != nil {
 		return p.err("invalid minutes: %v", p.tok.Val)
@@ -381,9 +392,9 @@ func (p *Parser) parseMinutes() error {
 	return nil
 }
 
-func (p *Parser) parseSeconds() error {
-	p.trace("is seconds")
-	p.parsed.Seconds = p.tok.Val
+func (p *Parser) parseSecond() error {
+	p.trace("is second")
+	p.parsed.Second = p.tok.Val
 	s, err := strconv.Atoi(p.tok.Val)
 	if err != nil {
 		return p.err("invalid seconds: %v", p.tok.Val)
@@ -396,7 +407,7 @@ func (p *Parser) parseSeconds() error {
 		p.trace("has fractions")
 		p.next()
 		p.next()
-		p.parsed.FracSeconds = p.tok.Val
+		p.parsed.FracSecond = p.tok.Val
 	}
 	return nil
 }

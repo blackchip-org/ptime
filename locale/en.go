@@ -69,7 +69,7 @@ var EnUS = Locale{
 	DayNames:      EnDayNames,
 	PeriodNames:   EnPeriodNames,
 	ZoneNames:     USZones,
-	DateSep:       "-/",
-	TimeSep:       ":",
+	DateSep:       HyphenSlashSep,
+	TimeSep:       ColonSep,
 	DecimalSep:    ".",
 }

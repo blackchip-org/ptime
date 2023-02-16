@@ -28,18 +28,18 @@ func TestParserEnUS(t *testing.T) {
 		{"date", "2 Jan 2006", Parsed{Month: "jan", Day: "2", Year: "2006", DateSep: " "}},
 		{"date", "2 Jan 06", Parsed{Month: "jan", Day: "2", Year: "06", DateSep: " "}},
 
-		{"time", "15:04:05", Parsed{Hours: "15", Minutes: "04", Seconds: "05", TimeSep: ":"}},
-		{"time", "15:04:05 pdt", Parsed{Hours: "15", Minutes: "04", Seconds: "05", Zone: "pdt", Offset: "-0700", TimeSep: ":"}},
-		{"time", "15:04:05.9999", Parsed{Hours: "15", Minutes: "04", Seconds: "05", FracSeconds: "9999", TimeSep: ":"}},
-		{"time", "15:04", Parsed{Hours: "15", Minutes: "04", TimeSep: ":"}},
-		{"time", "3:04P.M.", Parsed{Hours: "3", Minutes: "04", Period: "p", TimeSep: ":"}},
-		{"time", "3:04am", Parsed{Hours: "3", Minutes: "04", Period: "a", TimeSep: ":"}},
-		{"time", "3:04am EST", Parsed{Hours: "3", Minutes: "04", Period: "a", Zone: "est", Offset: "-0500", TimeSep: ":"}},
-		{"time", "3:04am -0500", Parsed{Hours: "3", Minutes: "04", Period: "a", Offset: "-0500", TimeSep: ":"}},
-		{"time", "3:04am +05:00", Parsed{Hours: "3", Minutes: "04", Period: "a", Offset: "+0500", TimeSep: ":"}},
-		{"time", "3:04am -0500 EST", Parsed{Hours: "3", Minutes: "04", Period: "a", Zone: "est", Offset: "-0500", TimeSep: ":"}},
+		{"time", "15:04:05", Parsed{Hour: "15", Minute: "04", Second: "05", TimeSep: ":"}},
+		{"time", "15:04:05 pdt", Parsed{Hour: "15", Minute: "04", Second: "05", Zone: "pdt", Offset: "-0700", TimeSep: ":"}},
+		{"time", "15:04:05.9999", Parsed{Hour: "15", Minute: "04", Second: "05", FracSecond: "9999", TimeSep: ":"}},
+		{"time", "15:04", Parsed{Hour: "15", Minute: "04", TimeSep: ":"}},
+		{"time", "3:04P.M.", Parsed{Hour: "3", Minute: "04", Period: "p", TimeSep: ":"}},
+		{"time", "3:04am", Parsed{Hour: "3", Minute: "04", Period: "a", TimeSep: ":"}},
+		{"time", "3:04am EST", Parsed{Hour: "3", Minute: "04", Period: "a", Zone: "est", Offset: "-0500", TimeSep: ":"}},
+		{"time", "3:04am -0500", Parsed{Hour: "3", Minute: "04", Period: "a", Offset: "-0500", TimeSep: ":"}},
+		{"time", "3:04am +05:00", Parsed{Hour: "3", Minute: "04", Period: "a", Offset: "+0500", TimeSep: ":"}},
+		{"time", "3:04am -0500 EST", Parsed{Hour: "3", Minute: "04", Period: "a", Zone: "est", Offset: "-0500", TimeSep: ":"}},
 
-		{"parse", "Mon Jan 1 2006 15:04:05 MST", Parsed{Weekday: "mon", Month: "jan", Day: "1", Year: "2006", Hours: "15", Minutes: "04", Seconds: "05", Zone: "mst", Offset: "-0700", DateSep: " ", TimeSep: ":"}},
+		{"parse", "Mon Jan 1 2006 15:04:05 MST", Parsed{Weekday: "mon", Month: "jan", Day: "1", Year: "2006", Hour: "15", Minute: "04", Second: "05", Zone: "mst", Offset: "-0700", DateSep: " ", TimeSep: ":"}},
 	}
 
 	p := NewParser(locale.EnUS)
@@ -66,17 +66,16 @@ func TestParserFrFR(t *testing.T) {
 		{"date", "2 janv 2006", Parsed{Month: "jan", Day: "2", Year: "2006", DateSep: " "}},
 		{"date", "lundi, 2 janvier", Parsed{Weekday: "mon", Month: "jan", Day: "2", DateSep: " "}},
 
-		{"time", "15:04:05,9999", Parsed{Hours: "15", Minutes: "04", Seconds: "05", FracSeconds: "9999", TimeSep: ":"}},
-		{"time", "15 h 04", Parsed{Hours: "15", Minutes: "04", TimeSep: "h"}},
-		{"time", "15h04", Parsed{Hours: "15", Minutes: "04", TimeSep: "h"}},
+		{"time", "15:04:05,9999", Parsed{Hour: "15", Minute: "04", Second: "05", FracSecond: "9999", TimeSep: ":"}},
+		{"time", "15 h 04", Parsed{Hour: "15", Minute: "04", HourSep: "h"}},
+		{"time", "15h04", Parsed{Hour: "15", Minute: "04", HourSep: "h"}},
 
-		{"parse", "lundi, 2/1/06 15:04:05,9999", Parsed{Weekday: "mon", Month: "1", Day: "2", Year: "06", Hours: "15", Minutes: "04", Seconds: "05", FracSeconds: "9999", DateSep: "/", TimeSep: ":"}},
+		{"parse", "lundi, 2/1/06 15:04:05,9999", Parsed{Weekday: "mon", Month: "1", Day: "2", Year: "06", Hour: "15", Minute: "04", Second: "05", FracSecond: "9999", DateSep: "/", TimeSep: ":"}},
 	}
 
 	p := NewParser(locale.FrFR)
 	p.Trace = true
 	for _, test := range tests {
-		// for _, test := range tests[len(tests)-1:] {
 		t.Run(test.fn+":"+test.text, func(t *testing.T) {
 			testValid(t, p, test.fn, test.text, test.parsed)
 		})

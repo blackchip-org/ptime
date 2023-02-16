@@ -43,7 +43,8 @@ var FrDayNames = map[string]Day{
 var FrFR = Locale{
 	MonthNames: FrMonthNames,
 	DayNames:   FrDayNames,
-	DateSep:    "-/",
-	TimeSep:    ":h",
+	DateSep:    HyphenSlashSep,
+	TimeSep:    ColonSep,
+	HourSep:    map[string]struct{}{"h": {}},
 	DecimalSep: ",",
 }
