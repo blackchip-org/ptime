@@ -39,13 +39,13 @@ func TestParserEnUS(t *testing.T) {
 		{"time", "3:04am +05:00", Parsed{Hour: "3", Minute: "04", Period: "a", Offset: "+0500", TimeSep: ":"}},
 		{"time", "3:04am -0500 EST", Parsed{Hour: "3", Minute: "04", Period: "a", Zone: "est", Offset: "-0500", TimeSep: ":"}},
 
-		{"parse", "Mon Jan 1 2006 15:04:05 MST", Parsed{Weekday: "mon", Month: "jan", Day: "1", Year: "2006", Hour: "15", Minute: "04", Second: "05", Zone: "mst", Offset: "-0700", DateSep: " ", TimeSep: ":"}},
+		{"parse", "Mon Jan 2 2006 15:04:05 MST", Parsed{Weekday: "mon", Month: "jan", Day: "2", Year: "2006", Hour: "15", Minute: "04", Second: "05", Zone: "mst", Offset: "-0700", DateSep: " ", TimeSep: ":"}},
+		// ANSI C
+		{"parse", "Mon Jan  2 15:04:05 2006", Parsed{Weekday: "mon", Month: "jan", Day: "2", Hour: "15", Minute: "04", Second: "05", Year: "2006", DateSep: " ", TimeSep: ":"}},
 	}
 
 	p := NewParser(locale.EnUS)
-	p.Trace = true
 	for _, test := range tests {
-		// for _, test := range tests[len(tests)-1:] {
 		t.Run(test.fn+":"+test.text, func(t *testing.T) {
 			testValid(t, p, test.fn, test.text, test.parsed)
 		})
@@ -93,7 +93,6 @@ func TestParserErrorEnUS(t *testing.T) {
 	}
 
 	p := NewParser(locale.EnUS)
-	p.Trace = true
 	for _, test := range tests {
 		t.Run(test.fn+":"+test.text, func(t *testing.T) {
 			check := func(have Parsed, err error) {

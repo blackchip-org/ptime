@@ -1,5 +1,7 @@
 package ptime
 
+import "fmt"
+
 type TokenType int
 
 const (
@@ -25,4 +27,8 @@ type Token struct {
 	Type TokenType
 	Val  string
 	Pos  int
+}
+
+func (t Token) String() string {
+	return fmt.Sprintf("%v '%v' (c%v)", t.Type, t.Val, t.Pos)
 }

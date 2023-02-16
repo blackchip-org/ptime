@@ -42,6 +42,7 @@ const (
 	ParsingDate
 	ParsingTime
 	ParsingZone
+	Done
 )
 
 func (s state) String() string {
@@ -56,14 +57,33 @@ func (s state) String() string {
 	return "Unknown"
 }
 
+type dateOrder int
+
+const (
+	UnknownOrder dateOrder = iota
+	DayMonthOrder
+	MonthDayOrder
+)
+
+func (d dateOrder) String() string {
+	switch d {
+	case DayMonthOrder:
+		return "day month"
+	case MonthDayOrder:
+		return "month day"
+	}
+	return "unknown"
+}
+
 type Parser struct {
 	locale.Locale
-	tokens []Token
-	tok    Token
-	idx    int
-	parsed Parsed
-	Trace  bool
-	state  state
+	tokens    []Token
+	tok       Token
+	idx       int
+	parsed    Parsed
+	Trace     bool
+	state     state
+	dateOrder dateOrder
 }
 
 func NewParser(l locale.Locale) *Parser {
@@ -72,12 +92,20 @@ func NewParser(l locale.Locale) *Parser {
 
 func (p *Parser) parse(text string) (Parsed, error) {
 	p.tokens = Scan(text)
+
+	if len(p.tokens) == 0 {
+		return Parsed{}, nil
+	}
+
 	p.idx = -1
+	p.tok = p.tokens[0]
 	p.parsed = Parsed{}
-	p.next()
+	p.dateOrder = UnknownOrder
 
 	for p.tok.Type != End {
 		var err error
+		p.trace("top")
+		p.next()
 		switch p.tok.Type {
 		case Text:
 			err = p.parseText()
@@ -89,7 +117,6 @@ func (p *Parser) parse(text string) (Parsed, error) {
 		if err != nil {
 			return p.parsed, err
 		}
-		p.next()
 	}
 	return p.parsed, nil
 }
@@ -113,12 +140,14 @@ func (p *Parser) parseText() error {
 	if p.state == ParsingDate {
 		if p.parsed.Weekday == "" {
 			if day, ok := p.DayNames[p.tok.Val]; ok {
+				p.trace("is weekday")
 				p.parsed.Weekday = string(day)
 				return nil
 			}
 		}
 		if p.parsed.Month == "" {
 			if mon, ok := p.MonthNames[p.tok.Val]; ok {
+				p.trace("is month")
 				p.parsed.Month = string(mon)
 				return nil
 			}
@@ -187,7 +216,6 @@ func (p *Parser) parseNumberTime() error {
 	if sep == "" {
 		la := p.lookahead(1)
 		if la.Val != "" {
-			p.trace("lookahead = '%v'", la.Val)
 			if _, ok := p.TimeSep[la.Val]; ok {
 				sep = la.Val
 			} else {
@@ -198,8 +226,10 @@ func (p *Parser) parseNumberTime() error {
 			p.trace("TimeSep = '%v'", sep)
 			p.parsed.TimeSep = sep
 		}
+		return p.parseTime()
 	}
-	return p.parseTime()
+	p.changeState(Done)
+	return p.parseYear4()
 }
 
 func (p *Parser) parseIndicator() error {
@@ -250,15 +280,18 @@ func (p *Parser) parseDate() error {
 		la := p.lookahead(1)
 		_, laIsMonth := p.MonthNames[la.Val]
 		if la.Type == Text && laIsMonth {
-			p.trace("lookahead(1) is '%v'", la.Val)
-			return p.parseDayMonthYear()
+			p.dateOrder = DayMonthOrder
+		} else if p.MonthDayOrder {
+			p.dateOrder = MonthDayOrder
+		} else {
+			p.dateOrder = DayMonthOrder
 		}
-		if p.MonthDayOrder {
-			return p.parseMonthDayYear()
-		}
+		p.trace("is %v order", p.dateOrder)
+	}
+	if p.dateOrder == DayMonthOrder {
 		return p.parseDayMonthYear()
 	}
-	return p.err("fixme")
+	return p.parseMonthDayYear()
 }
 
 func (p *Parser) parseYearDayMonth() error {
@@ -276,7 +309,6 @@ func (p *Parser) parseYearDayMonth() error {
 }
 
 func (p *Parser) parseDayMonthYear() error {
-	p.trace("is DMY")
 	if p.parsed.Day == "" {
 		return p.parseDay()
 	}
@@ -290,7 +322,6 @@ func (p *Parser) parseDayMonthYear() error {
 }
 
 func (p *Parser) parseMonthDayYear() error {
-	p.trace("is MDY")
 	if p.parsed.Month == "" {
 		return p.parseMonth()
 	}

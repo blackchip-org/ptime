@@ -13,11 +13,13 @@ import (
 
 var (
 	localeName string
+	trace      bool
 )
 
 func main() {
 	log.SetFlags(0)
 	flag.StringVar(&localeName, "l", "en-US", "set locale")
+	flag.BoolVar(&trace, "t", false, "trace")
 
 	flag.Parse()
 
@@ -28,6 +30,9 @@ func main() {
 	}
 
 	p := ptime.NewParser(l)
+	if trace {
+		p.Trace = true
+	}
 	res, err := p.Parse(text)
 	if err != nil {
 		fmt.Println("error")
