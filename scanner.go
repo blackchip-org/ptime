@@ -40,7 +40,7 @@ func (s *scanner) next() Token {
 	switch {
 	case unicode.IsDigit(s.ch):
 		return s.scanNumber()
-	case !s.inWord && unicode.IsLetter(s.ch):
+	case unicode.IsLetter(s.ch):
 		return s.scanText()
 	}
 	return s.scanIndicator()
@@ -64,7 +64,8 @@ func (s *scanner) scanText() Token {
 
 func (s *scanner) scanIndicator() Token {
 	start := s.idx
-	for s.ch != end && !unicode.IsSpace(s.ch) && !unicode.IsDigit(s.ch) {
+	s.scan()
+	for s.ch != end && !unicode.IsSpace(s.ch) && !unicode.IsDigit(s.ch) && !unicode.IsLetter(s.ch) {
 		s.scan()
 	}
 	return Token{Indicator, strings.ToLower(s.src[start:s.idx]), start + 1}

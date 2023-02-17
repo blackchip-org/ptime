@@ -44,10 +44,10 @@ var EnDayNames = map[string]Day{
 }
 
 var EnPeriodNames = map[string]Period{
+	"a":        AM,
 	"am":       AM,
-	"a.m.":     AM,
+	"p":        PM,
 	"pm":       PM,
-	"p.m.":     PM,
 	"noon":     Noon,
 	"midnight": Midnight,
 }
@@ -69,7 +69,14 @@ var EnUS = Locale{
 	DayNames:      EnDayNames,
 	PeriodNames:   EnPeriodNames,
 	ZoneNames:     USZones,
-	DateSep:       HyphenSlashSep,
-	TimeSep:       ColonSep,
+	DateSep:       []string{"-", "/"},
+	TimeSep:       []string{":"},
 	DecimalSep:    ".",
+	DateTimeSep:   []string{"t"},
+	UTCFlags:      []string{"utc", "z"},
+
+	Replacements: []string{
+		"a.m.", "am",
+		"p.m.", "pm",
+	},
 }

@@ -46,19 +46,13 @@ type Locale struct {
 	DayNames      map[string]Day
 	PeriodNames   map[string]Period
 	ZoneNames     map[string]string
-	DateSep       map[string]struct{}
-	TimeSep       map[string]struct{}
-	HourSep       map[string]struct{}
+	DateSep       []string
+	TimeSep       []string
+	DateTimeSep   []string
+	HourSep       []string
 	DecimalSep    string
-}
-
-var HyphenSlashSep = map[string]struct{}{
-	"-": {},
-	"/": {},
-}
-
-var ColonSep = map[string]struct{}{
-	":": {},
+	UTCFlags      []string
+	Replacements  []string
 }
 
 var table = map[string]Locale{

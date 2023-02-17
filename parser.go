@@ -10,21 +10,21 @@ import (
 )
 
 type Parsed struct {
-	Weekday    string `json:",omitempty"`
-	Year       string `json:",omitempty"`
-	Month      string `json:",omitempty"`
-	Day        string `json:",omitempty"`
-	OrdDay     string `json:",omitempty"`
-	Hour       string `json:",omitempty"`
-	Minute     string `json:",omitempty"`
-	Second     string `json:",omitempty"`
-	FracSecond string `json:",omitempty"`
-	Period     string `json:",omitempty"`
-	Zone       string `json:",omitempty"`
-	Offset     string `json:",omitempty"`
-	DateSep    string `json:",omitempty"`
-	TimeSep    string `json:",omitempty"`
-	HourSep    string `json:",omitempty"`
+	Weekday     string `json:",omitempty"`
+	Year        string `json:",omitempty"`
+	Month       string `json:",omitempty"`
+	Day         string `json:",omitempty"`
+	Hour        string `json:",omitempty"`
+	Minute      string `json:",omitempty"`
+	Second      string `json:",omitempty"`
+	FracSecond  string `json:",omitempty"`
+	Period      string `json:",omitempty"`
+	Zone        string `json:",omitempty"`
+	Offset      string `json:",omitempty"`
+	DateSep     string `json:",omitempty"`
+	TimeSep     string `json:",omitempty"`
+	DateTimeSep string `json:",omitempty"`
+	HourSep     string `json:",omitempty"`
 }
 
 func (p Parsed) String() string {
@@ -53,6 +53,8 @@ func (s state) String() string {
 		return "ParsingTime"
 	case ParsingZone:
 		return "ParsingZone"
+	case Done:
+		return "Done"
 	}
 	return "Unknown"
 }
@@ -61,16 +63,22 @@ type dateOrder int
 
 const (
 	UnknownOrder dateOrder = iota
-	DayMonthOrder
-	MonthDayOrder
+	DayMonthYearOrder
+	MonthDayYearOrder
+	YearMonthDayOrder
+	YearDayOrder
 )
 
 func (d dateOrder) String() string {
 	switch d {
-	case DayMonthOrder:
-		return "day month"
-	case MonthDayOrder:
-		return "month day"
+	case DayMonthYearOrder:
+		return "day-month-year"
+	case MonthDayYearOrder:
+		return "month-day-year"
+	case YearMonthDayOrder:
+		return "year-month-day"
+	case YearDayOrder:
+		return "year-day"
 	}
 	return "unknown"
 }
@@ -84,6 +92,7 @@ type Parser struct {
 	Trace     bool
 	state     state
 	dateOrder dateOrder
+	parseOne  bool
 }
 
 func NewParser(l locale.Locale) *Parser {
@@ -91,6 +100,13 @@ func NewParser(l locale.Locale) *Parser {
 }
 
 func (p *Parser) parse(text string) (Parsed, error) {
+	p.trace("state: %v", p.state)
+	text = strings.ToLower(text)
+	for i := 0; i < len(p.Replacements); i += 2 {
+		from := p.Replacements[i]
+		to := p.Replacements[i+1]
+		text = strings.ReplaceAll(text, from, to)
+	}
 	p.tokens = Scan(text)
 
 	if len(p.tokens) == 0 {
@@ -122,21 +138,27 @@ func (p *Parser) parse(text string) (Parsed, error) {
 }
 
 func (p *Parser) Parse(text string) (Parsed, error) {
-	p.changeState(ParsingDate)
+	p.state = Unknown
+	p.parseOne = false
 	return p.parse(text)
 }
 
 func (p *Parser) ParseDate(text string) (Parsed, error) {
-	p.changeState(ParsingDate)
+	p.state = ParsingDate
+	p.parseOne = true
 	return p.parse(text)
 }
 
 func (p *Parser) ParseTime(text string) (Parsed, error) {
-	p.changeState(ParsingTime)
+	p.state = ParsingTime
+	p.parseOne = true
 	return p.parse(text)
 }
 
 func (p *Parser) parseText() error {
+	if p.state == Unknown {
+		p.state = ParsingDate
+	}
 	if p.state == ParsingDate {
 		if p.parsed.Weekday == "" {
 			if day, ok := p.DayNames[p.tok.Val]; ok {
@@ -152,13 +174,33 @@ func (p *Parser) parseText() error {
 				return nil
 			}
 		}
+		if is(p.tok.Val, p.DateTimeSep) {
+			p.changeState(ParsingTime)
+			p.parsed.DateTimeSep = p.tok.Val
+			return nil
+		}
 	}
 	if p.state == ParsingTime {
-		if _, ok := p.TimeSep[p.tok.Val]; ok {
+		if is(p.tok.Val, p.TimeSep) {
 			return nil
+		}
+		if p.parsed.Period == "" {
+			period, ok := p.PeriodNames[p.tok.Val]
+			if ok {
+				p.trace("is period")
+				p.parsed.Period = string(period)
+				p.changeState(ParsingZone)
+				return nil
+			}
 		}
 		if _, ok := p.ZoneNames[p.tok.Val]; ok {
 			p.changeState(ParsingZone)
+		}
+		if is(p.tok.Val, p.UTCFlags) {
+			p.parsed.Zone = p.tok.Val
+			p.parsed.Offset = "+0000"
+			p.changeState(Done)
+			return nil
 		}
 	}
 	if p.state == ParsingZone {
@@ -178,10 +220,17 @@ func (p *Parser) parseText() error {
 }
 
 func (p *Parser) parseNumber() error {
+	if p.state == Unknown {
+		la := p.lookahead(1)
+		if la.Type == Indicator && (is(la.Val, p.TimeSep) || is(la.Val, p.HourSep)) {
+			p.changeState(ParsingTime)
+		} else {
+			p.changeState(ParsingDate)
+		}
+	}
 	if p.state == ParsingDate {
 		la := p.lookahead(1)
-		_, isSep := p.TimeSep[la.Val]
-		if la.Type == Indicator && isSep {
+		if la.Type == Indicator && is(la.Val, p.TimeSep) {
 			p.changeState(ParsingTime)
 
 		} else {
@@ -191,7 +240,11 @@ func (p *Parser) parseNumber() error {
 	if p.state == ParsingTime {
 		return p.parseNumberTime()
 	}
-	return nil
+	if p.state == ParsingZone {
+		p.changeState(Done)
+		return p.parseYear4()
+	}
+	return p.err("extra number: %v", p.tok.Val)
 }
 
 func (p *Parser) parseNumberDate() error {
@@ -199,7 +252,7 @@ func (p *Parser) parseNumberDate() error {
 	if sep == "" {
 		la := p.lookahead(1)
 		if la.Type == Indicator {
-			if _, ok := p.DateSep[la.Val]; ok {
+			if is(la.Val, p.DateSep) {
 				sep = la.Val
 			}
 		} else {
@@ -213,23 +266,21 @@ func (p *Parser) parseNumberDate() error {
 
 func (p *Parser) parseNumberTime() error {
 	sep := p.parsed.TimeSep
-	if sep == "" {
+	if sep == "" && p.parsed.HourSep == "" {
 		la := p.lookahead(1)
 		if la.Val != "" {
-			if _, ok := p.TimeSep[la.Val]; ok {
+			if is(la.Val, p.TimeSep) {
 				sep = la.Val
 			} else {
-				if _, ok := p.HourSep[la.Val]; !ok {
-					sep = " "
+				if is(la.Val, p.HourSep) {
+					sep = ""
 				}
 			}
 			p.trace("TimeSep = '%v'", sep)
 			p.parsed.TimeSep = sep
 		}
-		return p.parseTime()
 	}
-	p.changeState(Done)
-	return p.parseYear4()
+	return p.parseTime()
 }
 
 func (p *Parser) parseIndicator() error {
@@ -245,15 +296,6 @@ func (p *Parser) parseIndicator() error {
 		if p.tok.Val == "-" || p.tok.Val == "+" {
 			p.changeState(ParsingZone)
 		}
-		if p.parsed.Period == "" {
-			period, ok := p.PeriodNames[p.tok.Val]
-			if ok {
-				p.trace("is period")
-				p.parsed.Period = string(period)
-				p.changeState(ParsingZone)
-				return nil
-			}
-		}
 	}
 	if p.state == ParsingZone {
 		if p.tok.Val == "-" || p.tok.Val == "+" {
@@ -265,6 +307,11 @@ func (p *Parser) parseIndicator() error {
 }
 
 func (p *Parser) changeState(newState state) {
+	if p.parseOne {
+		if newState != ParsingZone {
+			newState = Done
+		}
+	}
 	if p.state != newState {
 		p.trace("state: %v -> %v", p.state, newState)
 	}
@@ -273,29 +320,43 @@ func (p *Parser) changeState(newState state) {
 
 func (p *Parser) parseDate() error {
 	delim := p.parsed.DateSep
-	if delim == "-" {
-		return p.parseYearDayMonth()
-	}
-	if delim != "" {
-		la := p.lookahead(1)
-		_, laIsMonth := p.MonthNames[la.Val]
-		if la.Type == Text && laIsMonth {
-			p.dateOrder = DayMonthOrder
-		} else if p.MonthDayOrder {
-			p.dateOrder = MonthDayOrder
-		} else {
-			p.dateOrder = DayMonthOrder
+	if p.dateOrder == UnknownOrder {
+		la1 := p.lookahead(1)
+		_, la1IsMonth := p.MonthNames[la1.Val]
+		la2 := p.lookahead(2)
+		_, la2IsMonth := p.MonthNames[la2.Val]
+
+		//p.trace("lookahead: %v", la.Val)
+		switch {
+		case delim == "-" && la2IsMonth:
+			p.dateOrder = DayMonthYearOrder
+		case delim == "-" && la2.Type == Number && len(la2.Val) == 3:
+			p.dateOrder = YearDayOrder
+		case delim == "-":
+			p.dateOrder = YearMonthDayOrder
+		case la1IsMonth:
+			p.dateOrder = DayMonthYearOrder
+		case p.MonthDayOrder:
+			p.dateOrder = MonthDayYearOrder
+		default:
+			p.dateOrder = DayMonthYearOrder
 		}
-		p.trace("is %v order", p.dateOrder)
+		p.trace("order: %v", p.dateOrder)
 	}
-	if p.dateOrder == DayMonthOrder {
+	switch p.dateOrder {
+	case YearDayOrder:
+		return p.parseYearDay()
+	case YearMonthDayOrder:
+		return p.parseYearMonthDay()
+	case DayMonthYearOrder:
 		return p.parseDayMonthYear()
+	case MonthDayYearOrder:
+		return p.parseMonthDayYear()
 	}
-	return p.parseMonthDayYear()
+	return p.err("unexpected '%v' in date", p.tok.Val)
 }
 
-func (p *Parser) parseYearDayMonth() error {
-	p.trace("is YDM")
+func (p *Parser) parseYearMonthDay() error {
 	if p.parsed.Year == "" {
 		return p.parseYear4()
 	}
@@ -304,6 +365,16 @@ func (p *Parser) parseYearDayMonth() error {
 	}
 	if p.parsed.Day == "" {
 		return p.parseDay()
+	}
+	return p.err("pass parseYearDayMonth")
+}
+
+func (p *Parser) parseYearDay() error {
+	if p.parsed.Year == "" {
+		return p.parseYear4()
+	}
+	if p.parsed.Day == "" {
+		return p.parseOrdinalDay()
 	}
 	return p.err("pass parseYearDayMonth")
 }
@@ -356,6 +427,9 @@ func (p *Parser) parseYear4() error {
 func (p *Parser) parseMonth() error {
 	p.trace("is month")
 	p.parsed.Month = p.tok.Val
+	if _, ok := p.MonthNames[p.tok.Val]; ok {
+		return nil
+	}
 	m, err := strconv.Atoi(p.tok.Val)
 	if err != nil {
 		return p.err("invalid month: %v", p.tok.Val)
@@ -379,6 +453,19 @@ func (p *Parser) parseDay() error {
 	return nil
 }
 
+func (p *Parser) parseOrdinalDay() error {
+	p.trace("is ordinal day")
+	p.parsed.Day = p.tok.Val
+	d, err := strconv.Atoi(p.tok.Val)
+	if err != nil {
+		return p.err("invalid day: %v", p.tok.Val)
+	}
+	if d < 1 || d > 365 {
+		return p.err("invalid day: %v", p.tok.Val)
+	}
+	return nil
+}
+
 func (p *Parser) parseTime() error {
 	if p.parsed.Hour == "" {
 		return p.parseHour()
@@ -389,7 +476,8 @@ func (p *Parser) parseTime() error {
 	if p.parsed.Second == "" {
 		return p.parseSecond()
 	}
-	return p.err("pass parseTime")
+	p.changeState(Done)
+	return p.parseYear4()
 }
 
 func (p *Parser) parseHour() error {
@@ -397,13 +485,14 @@ func (p *Parser) parseHour() error {
 	p.parsed.Hour = p.tok.Val
 	h, err := strconv.Atoi(p.tok.Val)
 	if err != nil {
-		return p.err("invalid hours: %v", p.tok.Val)
+		return p.err("invalid hour: %v", p.tok.Val)
 	}
 	if h < 0 || h >= 24 {
-		return p.err("invalid hours: %v", p.tok.Val)
+		return p.err("invalid hour: %v", p.tok.Val)
 	}
 	la := p.lookahead(1)
-	if _, ok := p.HourSep[la.Val]; ok {
+	if is(la.Val, p.HourSep) {
+		p.trace("HourSep = '%v'", la.Val)
 		p.parsed.HourSep = la.Val
 		p.next()
 	}
@@ -415,10 +504,10 @@ func (p *Parser) parseMinute() error {
 	p.parsed.Minute = p.tok.Val
 	m, err := strconv.Atoi(p.tok.Val)
 	if err != nil {
-		return p.err("invalid minutes: %v", p.tok.Val)
+		return p.err("invalid minute: %v", p.tok.Val)
 	}
 	if m < 0 || m >= 60 {
-		return p.err("invalid minutes: %v", p.tok.Val)
+		return p.err("invalid minute: %v", p.tok.Val)
 	}
 	return nil
 }
@@ -428,10 +517,10 @@ func (p *Parser) parseSecond() error {
 	p.parsed.Second = p.tok.Val
 	s, err := strconv.Atoi(p.tok.Val)
 	if err != nil {
-		return p.err("invalid seconds: %v", p.tok.Val)
+		return p.err("invalid second: %v", p.tok.Val)
 	}
 	if s < 0 || s >= 60 {
-		return p.err("invalid seconds: %v", p.tok.Val)
+		return p.err("invalid second: %v", p.tok.Val)
 	}
 	la := p.lookahead(1)
 	if la.Type == Indicator && la.Val == p.DecimalSep {
@@ -504,4 +593,13 @@ func (p *Parser) trace(format string, a ...any) {
 		fmt.Printf(format, a...)
 		fmt.Println()
 	}
+}
+
+func is(text string, domain []string) bool {
+	for _, v := range domain {
+		if text == v {
+			return true
+		}
+	}
+	return false
 }

@@ -12,14 +12,18 @@ import (
 )
 
 var (
+	dateOnly   bool
 	localeName string
-	trace      bool
+	timeOnly   bool
+	verbose    bool
 )
 
 func main() {
 	log.SetFlags(0)
+	flag.BoolVar(&dateOnly, "d", false, "only parse date")
 	flag.StringVar(&localeName, "l", "en-US", "set locale")
-	flag.BoolVar(&trace, "t", false, "trace")
+	flag.BoolVar(&timeOnly, "t", false, "only parse time")
+	flag.BoolVar(&verbose, "v", false, "verbose")
 
 	flag.Parse()
 
@@ -30,13 +34,22 @@ func main() {
 	}
 
 	p := ptime.NewParser(l)
-	if trace {
+	if verbose {
 		p.Trace = true
 	}
-	res, err := p.Parse(text)
+
+	var parseFn func(string) (ptime.Parsed, error)
+	switch {
+	case dateOnly:
+		parseFn = p.ParseDate
+	case timeOnly:
+		parseFn = p.ParseTime
+	default:
+		parseFn = p.Parse
+	}
+	res, err := parseFn(text)
 	if err != nil {
-		fmt.Println("error")
-		log.Fatal(err)
+		log.Fatalf("error: %v", err)
 	}
 	b, err := json.MarshalIndent(res, "", "  ")
 	if err != nil {

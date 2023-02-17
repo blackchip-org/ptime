@@ -24,6 +24,13 @@ func TestScanner(t *testing.T) {
 			{Indicator, "/", 4},
 			{Number, "2003", 5},
 		}},
+		{"2-Jan-06", []Token{
+			{Number, "2", 1},
+			{Indicator, "-", 2},
+			{Text, "jan", 3},
+			{Indicator, "-", 6},
+			{Number, "06", 7},
+		}},
 	}
 
 	for _, test := range tests {
