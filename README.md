@@ -20,15 +20,15 @@ Output:
 
 ```json
 {
-  "Weekday": "mon",
+  "Weekday": "Mon",
   "Year": "2006",
-  "Month": "jan",
+  "Month": "Jan",
   "Day": "2",
-  "Hours": "3",
-  "Minutes": "04",
-  "Seconds": "05",
-  "Period": "p",
-  "Zone": "mst",
+  "Hour": "3",
+  "Minute": "04",
+  "Second": "05",
+  "Period": "PM",
+  "Zone": "MST",
   "Offset": "-0700",
   "DateSep": " ",
   "TimeSep": ":"
@@ -41,14 +41,14 @@ Output:
 
 ```json
 {
-  "Weekday": "mon",
+  "Weekday": "Mon",
   "Year": "06",
   "Month": "1",
   "Day": "2",
-  "Hours": "15",
-  "Minutes": "04",
-  "Seconds": "05",
-  "FracSeconds": "9999",
+  "Hour": "15",
+  "Minute": "04",
+  "Second": "05",
+  "FracSecond": "9999",
   "DateSep": "/",
   "TimeSep": ":"
 }
