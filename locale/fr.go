@@ -59,6 +59,6 @@ var FrFR = MustNew(Def{
 	TimeSep:        []string{":"},
 	HourSep:        []string{"h"},
 	DecimalSep:     ",",
-	DateTimeSep:    []string{"t"},
-	UTCFlags:       []string{"utc", "z"},
+	DateTimeSep:    []string{"T"},
+	UTCFlags:       []string{"UTC", "Z"},
 })
