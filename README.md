@@ -75,12 +75,12 @@ Code example:
 package main
 
 import (
-	"fmt"
-	"log"
-	"time"
+    "fmt"
+    "log"
+    "time"
 
-	"github.com/blackchip-org/ptime"
-	"github.com/blackchip-org/ptime/locale"
+    "github.com/blackchip-org/ptime"
+    "github.com/blackchip-org/ptime/locale"
 )
 
 func main() {
