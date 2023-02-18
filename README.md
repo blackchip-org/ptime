@@ -2,7 +2,8 @@
 
 Parse date and times without knowing the layout ahead of time.
 
-Experimental and a work in progress. More details to come later.
+Experimental and a work in progress. More details to come later. Use at
+your own risk.
 
 ## Installation
 
