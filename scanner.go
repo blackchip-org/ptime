@@ -1,7 +1,6 @@
 package ptime
 
 import (
-	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -59,7 +58,7 @@ func (s *scanner) scanText() Token {
 	for unicode.IsLetter(s.ch) {
 		s.scan()
 	}
-	return Token{Text, strings.ToLower(s.src[start:s.idx]), start + 1}
+	return Token{Text, s.src[start:s.idx], start + 1}
 }
 
 func (s *scanner) scanIndicator() Token {
@@ -68,7 +67,7 @@ func (s *scanner) scanIndicator() Token {
 	for s.ch != end && !unicode.IsSpace(s.ch) && !unicode.IsDigit(s.ch) && !unicode.IsLetter(s.ch) {
 		s.scan()
 	}
-	return Token{Indicator, strings.ToLower(s.src[start:s.idx]), start + 1}
+	return Token{Indicator, s.src[start:s.idx], start + 1}
 }
 
 func (s *scanner) skipWhitespace() {

@@ -84,7 +84,7 @@ func (d dateOrder) String() string {
 }
 
 type Parser struct {
-	locale.Locale
+	loc       *locale.Locale
 	tokens    []Token
 	tok       Token
 	idx       int
@@ -95,18 +95,12 @@ type Parser struct {
 	parseOne  bool
 }
 
-func NewParser(l locale.Locale) *Parser {
-	return &Parser{Locale: l}
+func NewParser(l *locale.Locale) *Parser {
+	return &Parser{loc: l}
 }
 
 func (p *Parser) parse(text string) (Parsed, error) {
 	p.trace("state: %v", p.state)
-	text = strings.ToLower(text)
-	for i := 0; i < len(p.Replacements); i += 2 {
-		from := p.Replacements[i]
-		to := p.Replacements[i+1]
-		text = strings.ReplaceAll(text, from, to)
-	}
 	p.tokens = Scan(text)
 
 	if len(p.tokens) == 0 {
@@ -161,31 +155,32 @@ func (p *Parser) parseText() error {
 	}
 	if p.state == ParsingDate {
 		if p.parsed.Weekday == "" {
-			if day, ok := p.DayNames[p.tok.Val]; ok {
+			if day, ok := lookupDay(p.loc, p.tok.Val); ok {
 				p.trace("is weekday")
-				p.parsed.Weekday = string(day)
+				p.parsed.Weekday = day
 				return nil
 			}
 		}
 		if p.parsed.Month == "" {
-			if mon, ok := p.MonthNames[p.tok.Val]; ok {
+			if mon, ok := lookupMonth(p.loc, p.tok.Val); ok {
 				p.trace("is month")
-				p.parsed.Month = string(mon)
+				p.parsed.Month = mon
 				return nil
 			}
 		}
-		if is(p.tok.Val, p.DateTimeSep) {
+		if inSet(p.tok.Val, p.loc.DateTimeSep) {
+			p.trace("is date time separator")
 			p.changeState(ParsingTime)
 			p.parsed.DateTimeSep = p.tok.Val
 			return nil
 		}
 	}
 	if p.state == ParsingTime {
-		if is(p.tok.Val, p.TimeSep) {
+		if inSet(p.tok.Val, p.loc.TimeSep) {
 			return nil
 		}
 		if p.parsed.Period == "" {
-			period, ok := p.PeriodNames[p.tok.Val]
+			period, ok := lookupPeriod(p.loc, p.tok.Val)
 			if ok {
 				p.trace("is period")
 				p.parsed.Period = string(period)
@@ -193,10 +188,11 @@ func (p *Parser) parseText() error {
 				return nil
 			}
 		}
-		if _, ok := p.ZoneNames[p.tok.Val]; ok {
+		if _, ok := p.loc.ZoneNamesShort[p.tok.Val]; ok {
 			p.changeState(ParsingZone)
 		}
-		if is(p.tok.Val, p.UTCFlags) {
+		if inSet(p.tok.Val, p.loc.UTCFlags) {
+			p.trace("is UTC")
 			p.parsed.Zone = p.tok.Val
 			p.parsed.Offset = "+0000"
 			p.changeState(Done)
@@ -204,8 +200,9 @@ func (p *Parser) parseText() error {
 		}
 	}
 	if p.state == ParsingZone {
+		p.trace("is zone")
 		p.parsed.Zone = p.tok.Val
-		offset, ok := p.ZoneNames[p.tok.Val]
+		offset, ok := p.loc.ZoneNamesShort[p.tok.Val]
 		if !ok {
 			return p.err("unknown zone: %v", p.tok.Val)
 		}
@@ -222,7 +219,7 @@ func (p *Parser) parseText() error {
 func (p *Parser) parseNumber() error {
 	if p.state == Unknown {
 		la := p.lookahead(1)
-		if la.Type == Indicator && (is(la.Val, p.TimeSep) || is(la.Val, p.HourSep)) {
+		if la.Type == Indicator && (inSet(la.Val, p.loc.TimeSep) || inSet(la.Val, p.loc.HourSep)) {
 			p.changeState(ParsingTime)
 		} else {
 			p.changeState(ParsingDate)
@@ -230,7 +227,7 @@ func (p *Parser) parseNumber() error {
 	}
 	if p.state == ParsingDate {
 		la := p.lookahead(1)
-		if la.Type == Indicator && is(la.Val, p.TimeSep) {
+		if la.Type == Indicator && inSet(la.Val, p.loc.TimeSep) {
 			p.changeState(ParsingTime)
 
 		} else {
@@ -252,7 +249,7 @@ func (p *Parser) parseNumberDate() error {
 	if sep == "" {
 		la := p.lookahead(1)
 		if la.Type == Indicator {
-			if is(la.Val, p.DateSep) {
+			if inSet(la.Val, p.loc.DateSep) {
 				sep = la.Val
 			}
 		} else {
@@ -269,10 +266,10 @@ func (p *Parser) parseNumberTime() error {
 	if sep == "" && p.parsed.HourSep == "" {
 		la := p.lookahead(1)
 		if la.Val != "" {
-			if is(la.Val, p.TimeSep) {
+			if inSet(la.Val, p.loc.TimeSep) {
 				sep = la.Val
 			} else {
-				if is(la.Val, p.HourSep) {
+				if inSet(la.Val, p.loc.HourSep) {
 					sep = ""
 				}
 			}
@@ -322,9 +319,9 @@ func (p *Parser) parseDate() error {
 	delim := p.parsed.DateSep
 	if p.dateOrder == UnknownOrder {
 		la1 := p.lookahead(1)
-		_, la1IsMonth := p.MonthNames[la1.Val]
+		_, la1IsMonth := lookupMonth(p.loc, la1.Val)
 		la2 := p.lookahead(2)
-		_, la2IsMonth := p.MonthNames[la2.Val]
+		_, la2IsMonth := lookupMonth(p.loc, la2.Val)
 
 		//p.trace("lookahead: %v", la.Val)
 		switch {
@@ -336,7 +333,7 @@ func (p *Parser) parseDate() error {
 			p.dateOrder = YearMonthDayOrder
 		case la1IsMonth:
 			p.dateOrder = DayMonthYearOrder
-		case p.MonthDayOrder:
+		case p.loc.MonthDayOrder:
 			p.dateOrder = MonthDayYearOrder
 		default:
 			p.dateOrder = DayMonthYearOrder
@@ -408,11 +405,15 @@ func (p *Parser) parseMonthDayYear() error {
 func (p *Parser) parseYear() error {
 	p.trace("is year")
 	p.parsed.Year = p.tok.Val
-	if len(p.parsed.Year) != 4 && len(p.parsed.Year) != 2 {
+	switch len(p.parsed.Year) {
+	case 4:
+		//
+	case 2:
+		//
+	default:
 		return p.err("invalid year: %v", p.parsed.Year)
 	}
 	return nil
-
 }
 
 func (p *Parser) parseYear4() error {
@@ -427,7 +428,7 @@ func (p *Parser) parseYear4() error {
 func (p *Parser) parseMonth() error {
 	p.trace("is month")
 	p.parsed.Month = p.tok.Val
-	if _, ok := p.MonthNames[p.tok.Val]; ok {
+	if _, ok := lookupMonth(p.loc, p.tok.Val); ok {
 		return nil
 	}
 	m, err := strconv.Atoi(p.tok.Val)
@@ -490,8 +491,9 @@ func (p *Parser) parseHour() error {
 	if h < 0 || h >= 24 {
 		return p.err("invalid hour: %v", p.tok.Val)
 	}
+
 	la := p.lookahead(1)
-	if is(la.Val, p.HourSep) {
+	if inSet(la.Val, p.loc.HourSep) {
 		p.trace("HourSep = '%v'", la.Val)
 		p.parsed.HourSep = la.Val
 		p.next()
@@ -522,8 +524,9 @@ func (p *Parser) parseSecond() error {
 	if s < 0 || s >= 60 {
 		return p.err("invalid second: %v", p.tok.Val)
 	}
+
 	la := p.lookahead(1)
-	if la.Type == Indicator && la.Val == p.DecimalSep {
+	if la.Type == Indicator && la.Val == p.loc.DecimalSep {
 		p.trace("has fractions")
 		p.next()
 		p.next()
@@ -595,11 +598,36 @@ func (p *Parser) trace(format string, a ...any) {
 	}
 }
 
-func is(text string, domain []string) bool {
+func inSet(text string, domain []string) bool {
+	text = strings.ToLower(text)
 	for _, v := range domain {
-		if text == v {
+		if text == strings.ToLower(v) {
 			return true
 		}
 	}
 	return false
+}
+
+func lookupMonth(l *locale.Locale, text string) (string, bool) {
+	n, ok := l.MonthNum[text]
+	if !ok {
+		return "", false
+	}
+	return locale.EnMonthNamesAbbr[n-1], true
+}
+
+func lookupDay(l *locale.Locale, text string) (string, bool) {
+	n, ok := l.DayNum[text]
+	if !ok {
+		return "", false
+	}
+	return locale.EnDayNamesAbbr[n], true
+}
+
+func lookupPeriod(l *locale.Locale, text string) (string, bool) {
+	n, ok := l.PeriodNum[text]
+	if !ok {
+		return "", false
+	}
+	return locale.EnPeriodNamesAbbr[n][0], true
 }

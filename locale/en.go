@@ -1,82 +1,92 @@
 package locale
 
-var EnMonthNames = map[string]Month{
-	"january":   Jan,
-	"jan":       Jan,
-	"february":  Feb,
-	"feb":       Feb,
-	"march":     Mar,
-	"mar":       Mar,
-	"april":     Apr,
-	"apr":       Apr,
-	"may":       May,
-	"june":      Jun,
-	"jun":       Jun,
-	"july":      Jul,
-	"jul":       Jul,
-	"august":    Aug,
-	"aug":       Aug,
-	"september": Sep,
-	"sep":       Sep,
-	"october":   Oct,
-	"oct":       Oct,
-	"november":  Nov,
-	"nov":       Nov,
-	"december":  Dec,
-	"dec":       Dec,
+var EnMonthNamesWide = []string{
+	"January",
+	"February",
+	"March",
+	"April",
+	"May",
+	"June",
+	"July",
+	"August",
+	"September",
+	"October",
+	"November",
+	"December",
 }
 
-var EnDayNames = map[string]Day{
-	"sunday":    Sun,
-	"sun":       Sun,
-	"monday":    Mon,
-	"mon":       Mon,
-	"tuesday":   Tue,
-	"tue":       Tue,
-	"wednesday": Wed,
-	"wed":       Wed,
-	"thursday":  Thu,
-	"thr":       Thu,
-	"friday":    Fri,
-	"fri":       Fri,
-	"saturday":  Sat,
-	"sat":       Sat,
+var EnMonthNamesAbbr = []string{
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec",
 }
 
-var EnPeriodNames = map[string]Period{
-	"a":        AM,
-	"am":       AM,
-	"p":        PM,
-	"pm":       PM,
-	"noon":     Noon,
-	"midnight": Midnight,
+var EnDayNamesWide = []string{
+	"Sunday",
+	"Monday",
+	"Tuesday",
+	"Wednesday",
+	"Thursday",
+	"Friday",
+	"Saturday",
 }
 
-var USZones = map[string]string{
-	"est": "-0500",
-	"cst": "-0600",
-	"mst": "-0700",
-	"pst": "-0800",
-	"edt": "-0400",
-	"cdt": "-0500",
-	"mdt": "-0600",
-	"pdt": "-0700",
+var EnDayNamesAbbr = []string{
+	"Sun",
+	"Mon",
+	"Tue",
+	"Wed",
+	"Thr",
+	"Fri",
+	"Sat",
 }
 
-var EnUS = Locale{
-	MonthDayOrder: true,
-	MonthNames:    EnMonthNames,
-	DayNames:      EnDayNames,
-	PeriodNames:   EnPeriodNames,
-	ZoneNames:     USZones,
-	DateSep:       []string{"-", "/"},
-	TimeSep:       []string{":"},
-	DecimalSep:    ".",
-	DateTimeSep:   []string{"t"},
-	UTCFlags:      []string{"utc", "z"},
-
-	Replacements: []string{
-		"a.m.", "am",
-		"p.m.", "pm",
-	},
+var EnPeriodNamesAbbr = String2D{
+	AM:       []string{"AM", "am"},
+	PM:       []string{"PM", "pm"},
+	Midnight: []string{"midnight"},
+	Noon:     []string{"noon"},
 }
+
+var EnPeriodNamesNarrow = String2D{
+	AM:       []string{"a"},
+	PM:       []string{"p"},
+	Midnight: []string{"mi"},
+	Noon:     []string{"n"},
+}
+
+var EnUSZonesShort = map[string]string{
+	"EST": "-0500",
+	"CST": "-0600",
+	"MST": "-0700",
+	"PST": "-0800",
+	"EDT": "-0400",
+	"CDT": "-0500",
+	"MDT": "-0600",
+	"PDT": "-0700",
+}
+
+var EnUS = MustNew(Def{
+	MonthDayOrder:     true,
+	MonthNamesWide:    EnMonthNamesWide,
+	MonthNamesAbbr:    EnMonthNamesAbbr,
+	DayNamesWide:      EnDayNamesWide,
+	DayNamesAbbr:      EnDayNamesAbbr,
+	PeriodNamesAbbr:   EnPeriodNamesAbbr,
+	PeriodNamesNarrow: EnPeriodNamesNarrow,
+	ZoneNamesShort:    EnUSZonesShort,
+	DateSep:           []string{"-", "/"},
+	TimeSep:           []string{":"},
+	DecimalSep:        ".",
+	DateTimeSep:       []string{"T"},
+	UTCFlags:          []string{"UTC", "Z"},
+})

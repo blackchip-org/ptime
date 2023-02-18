@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/blackchip-org/ptime"
 	"github.com/blackchip-org/ptime/locale"
@@ -13,6 +14,7 @@ import (
 
 var (
 	dateOnly   bool
+	format     bool
 	localeName string
 	timeOnly   bool
 	verbose    bool
@@ -21,6 +23,7 @@ var (
 func main() {
 	log.SetFlags(0)
 	flag.BoolVar(&dateOnly, "d", false, "only parse date")
+	flag.BoolVar(&format, "f", false, "format the result")
 	flag.StringVar(&localeName, "l", "en-US", "set locale")
 	flag.BoolVar(&timeOnly, "t", false, "only parse time")
 	flag.BoolVar(&verbose, "v", false, "verbose")
@@ -51,9 +54,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
-	b, err := json.MarshalIndent(res, "", "  ")
-	if err != nil {
-		log.Panic(err)
+
+	if format {
+		t, err := ptime.Time(res, time.Now())
+		if err != nil {
+			log.Fatalf("unexpected error: %v", err)
+		}
+		fmt.Println(t)
+	} else {
+		b, err := json.MarshalIndent(res, "", "  ")
+		if err != nil {
+			log.Panic(err)
+		}
+		fmt.Println(string(b))
 	}
-	fmt.Println(string(b))
 }
