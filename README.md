@@ -57,7 +57,7 @@ Output:
 }
 ```
 
-The only locales supported at the moment are
+The only locales pre-configured at the moment are
 [en-US](https://github.com/blackchip-org/ptime/blob/main/locale/en.go) and
 [fr-FR](https://github.com/blackchip-org/ptime/blob/main/locale/fr.go). The
 [CLDR](https://cldr.unicode.org/) may be included at some point.

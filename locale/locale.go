@@ -7,10 +7,26 @@ import (
 
 type String2D [][]string
 
-type Period int
+func (s String2D) Main(index int) string {
+	if len(s[index]) == 0 {
+		return ""
+	}
+	return s[index][0]
+}
+
+func (s String2D) Alt(index int) string {
+	switch len(s[index]) {
+	case 0:
+		return ""
+	case 1:
+		return s[index][0]
+	default:
+		return s[index][1]
+	}
+}
 
 const (
-	AM Period = iota
+	AM = iota
 	PM
 	Noon
 	Midnight
