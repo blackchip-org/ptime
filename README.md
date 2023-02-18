@@ -1,8 +1,8 @@
 # ptime
 
-Date and time parser.
+Parse date and times without knowing the layout ahead of time.
 
-Experimental and a work in progress.
+Experimental and a work in progress. More details to come later.
 
 ## Installation
 
@@ -53,6 +53,18 @@ Output:
   "TimeSep": ":"
 }
 ```
+
+The only locales supported at the moment are
+[en-US](https://github.com/blackchip-org/ptime/blob/main/locale/en.go) and
+[fr-FR](https://github.com/blackchip-org/ptime/blob/main/locale/fr.go). The
+[CLDR](https://cldr.unicode.org/) may be included at some point.
+
+Supported layouts are shown in the tests here:
+
+https://github.com/blackchip-org/ptime/blob/main/parser_test.go
+
+The behavior of other layouts is undefined. Use the `-v` option on the
+command line to get insight into the parsing process.
 
 ## License
 
