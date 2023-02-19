@@ -9,13 +9,14 @@ Experimental and a work in progress. Use at your own risk.
 
 ## Overview
 
-This library is for parsing, on a best effort basis, input that is provided
-by a user without having to be strict on the layout. The goal is to
-accept commonly used formats and try to reject those that don't make sense.
-Uncommon formats may parse, may fail, or may parse incorrectly. The
-expectation is that the user is able to review the input and re-enter the
-date or time if it wasn't parsed correctly. This library is not appropriate for parsing in bulk with no supervision or when there needs to be a 100%
-guarantee that the parsing is correct.
+This library is for parsing, on a best effort basis, input that is provided by
+a user without having to be strict on the layout. The goal is to accept
+commonly used layouts and try to reject those that don't make sense. Uncommon
+layouts may parse, may fail, or may parse incorrectly. The expectation is that
+the user is able to review the input and re-enter the date or time if it wasn't
+parsed correctly. This library is not appropriate for parsing in bulk with no
+supervision or when there needs to be a 100% guarantee that the parsing is
+correct.
 
 A locale is necessary for parsing. The only locales pre-configured at the moment
 are [en-US](https://github.com/blackchip-org/ptime/blob/main/locale/en.go) and
