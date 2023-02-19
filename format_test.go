@@ -118,6 +118,11 @@ func TestFormat(t *testing.T) {
 			"[hour]:[minute]:[second]",
 			"17:30:25",
 		},
+		{
+			"17:30:00",
+			"[hour]:[minute]:[second]",
+			"17:30:00",
+		},
 	}
 
 	l, err := time.LoadLocation("America/Denver")

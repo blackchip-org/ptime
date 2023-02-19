@@ -81,7 +81,7 @@ func Format(loc *locale.Locale, layout string, t time.Time) string {
 		}
 		i++
 	}
-	return result.String()
+	return strings.TrimSpace(result.String())
 }
 
 func formatWeekday(loc *locale.Locale, format string, t time.Time) string {
@@ -159,7 +159,7 @@ func formatMinute(loc *locale.Locale, format string, t time.Time) string {
 func formatSecond(loc *locale.Locale, format string, t time.Time) string {
 	switch format {
 	case "", "0":
-		return strconv.Itoa(t.Second())
+		return fmt.Sprintf("%02d", t.Second())
 	}
 
 	_, err := strconv.Atoi(format)

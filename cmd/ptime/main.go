@@ -14,7 +14,7 @@ import (
 
 var (
 	dateOnly   bool
-	format     bool
+	format     string
 	localeName string
 	timeOnly   bool
 	verbose    bool
@@ -23,7 +23,7 @@ var (
 func main() {
 	log.SetFlags(0)
 	flag.BoolVar(&dateOnly, "d", false, "only parse date")
-	flag.BoolVar(&format, "f", false, "format the result")
+	flag.StringVar(&format, "f", "", "format the result")
 	flag.StringVar(&localeName, "l", "en-US", "set locale")
 	flag.BoolVar(&timeOnly, "t", false, "only parse time")
 	flag.BoolVar(&verbose, "v", false, "verbose")
@@ -55,12 +55,12 @@ func main() {
 		log.Fatalf("error: %v", err)
 	}
 
-	if format {
+	if format != "" {
 		t, err := ptime.Time(res, time.Now())
 		if err != nil {
 			log.Fatalf("unexpected error: %v", err)
 		}
-		fmt.Println(t)
+		fmt.Println(ptime.Format(l, format, t))
 	} else {
 		b, err := json.MarshalIndent(res, "", "  ")
 		if err != nil {
