@@ -96,10 +96,11 @@ to 1900 or use an explicit 4 digit year.
 
 ## Formatting
 
-Use the `Format` function to format a `time.Time` with an alterative syntax.
-The function takes a locale, a layout, and the time to format. The contents
-of the layout are copied as-is and evaluating date/time fields denoted in
-square brackets. For example, the following date:
+Use the `Format` function to format a `time.Time` with an alterative syntax to
+the one provided in the standard library. The function takes a locale, a
+layout, and the time to format. The contents of the layout are copied as-is and
+date/time fields denoted in square brackets are evaluated. For example, the
+following date:
 
     2006-01-02
 
@@ -161,7 +162,7 @@ Install with:
 
 ## Command line
 
-A command line interface is provided for testing parsing and formatting.
+A command line interface is provided for quick parsing and formatting.
 
 ```
 Usage: ptime [options] field ...
@@ -174,7 +175,7 @@ Usage: ptime [options] field ...
   -v	verbose
 ```
 
-Examples:
+Example:
 
 ```bash
 ptime -l en-US Mon Jan 2 2006 3:04:05pm MST
@@ -199,6 +200,8 @@ Output:
 }
 ```
 
+Example:
+
 ```bash
 ptime -l fr-FR lundi, 2/1/06 15:04:05,9999
 ```
@@ -219,6 +222,8 @@ Output:
   "TimeSep": ":"
 }
 ```
+
+Example:
 
 ```bash
 ptime -f "[day] [month/abbr] [year/2]" 2006-01-02
