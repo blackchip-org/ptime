@@ -4,8 +4,152 @@
 
 Parse date and times without knowing the layout ahead of time.
 
-Experimental and a work in progress. More details to come later. Use at
-your own risk.
+Experimental and a work in progress. Use at your own risk.
+
+
+## Overview
+
+This library is for parsing, on a best effort basis, input that is provided
+by a user without having to be strict on the layout. The goal is to
+accept commonly used formats and try to reject those that don't make sense.
+Uncommon formats may parse, may fail, or may parse incorrectly. The
+expectation is that the user is able to review the input and re-enter the
+date or time if it wasn't parsed correctly. This library is not appropriate for parsing in bulk with no supervision or when there needs to be a 100%
+guarantee that the parsing is correct.
+
+A locale is necessary for parsing. The only locales pre-configured at the moment
+are [en-US](https://github.com/blackchip-org/ptime/blob/main/locale/en.go) and
+[fr-FR](https://github.com/blackchip-org/ptime/blob/main/locale/fr.go). The
+[CLDR](https://cldr.unicode.org/) may be included at some point. In the mean
+time, structures can be constructed manually with the needed locale
+information.
+
+## Parsing
+
+The result of a parse is a `Parsed` structure of strings that contains the
+fields that were identified. For example:
+
+```go
+ptime.Parse(locale.EnUS, "3:05pm")
+```
+
+returns this structure:
+
+```json
+{
+  "Hour": "3",
+  "Minute": "05",
+  "Period": "PM",
+  "TimeSep": ":"
+}
+```
+
+Names are normalized to an abbreviated format in the en-US locale. For example,
+Monday and lundi would both be normalized to Mon. For example:
+
+```go
+ptime.Parse(locale.FrFR, "mardi, 18 avril")
+```
+
+returns this:
+
+```json
+{
+  "Weekday": "Tue",
+  "Month": "Apr",
+  "Day": "18",
+  "DateSep": " "
+}
+```
+
+Besides `Parse`, there are `ParseDate` and `ParseTime` functions that can
+be used to restrict the parse as needed.
+
+Layouts known to work can be found by reviewing the test cases here:
+
+https://github.com/blackchip-org/ptime/blob/main/parser_test.go
+
+The results of parsing any other layout are undefined.
+
+## Time
+
+A `time.Time` can be created from a `Parsed` structure given a reference
+time. For example:
+
+```go
+p, err := ptime.Parse(locale.EnUS, "3:04:05pm MST")
+if err != nil {
+    log.Panic(err)
+}
+t, err := ptime.Time(p, time.Now())
+```
+
+In this case, we don't want the `time.Time` value to be in the year 0, so the
+year, month, and day is used from the reference time given as `time.Now()`.
+Use `time.Time{}` if you really want year 0 but be aware that times can
+be weird there.
+
+If a parsed value contains a 2 digit year, the century will be set to the
+year found in the reference time. If now is the year 2023 and the 2 digit year
+is 99, the year will evaluate to 2099. To get 1999, set the reference year
+to 1900 or use an explicit 4 digit year.
+
+## Formatting
+
+Use the `Format` function to format a `time.Time` with an alterative syntax.
+The function takes a locale, a layout, and the time to format. The contents
+of the layout are copied as-is and evaluating date/time fields denoted in
+square brackets. For example, the following date:
+
+    2006-01-02
+
+Can be formatted with:
+
+    [year]-[momth]-[day]
+
+Field names can be followed by a `/` and a formatting directive. For example,
+the following date:
+
+    2 Jan 06
+
+Can be formatted with:
+
+    [day] [month/abbr] [year/2]
+
+The available fields and formats are as follows:
+
+| Field/Format     | Example
+|-------------------|-------------------------
+| `weekday`         | `"Monday"`
+| `weekday/abbr`    | `"Mon"`
+| `weekday/wide`    | `"Monday"`
+| `year`            | `"2006"`
+| `year/2`          | `"06"`
+| `month`           | `"1"`
+| `month/2`         | `" 1"`
+| `month/02`        | `"01"`
+| `month/abbr`      | `"Jan"`
+| `month/name`      | `"January"`
+| `month/wide`      | `"January"`
+| `day`             | `"2"`
+| `day/2`           | `" 2"`
+| `day/02`          | `"02"`
+| `day/year`        | `"002"`
+| `hour`            | `"15"`
+| `hour/12`         | `"3"`
+| `hour/24`         | `"15"`
+| `minute`          | `"04"`
+| `second`          | `"05"`
+| `second/4`        | `"05.9999"`
+| `period`          | `"AM"`
+| `period/abbr`     | `"AM"`
+| `period/alt`      | `"am"`
+| `period/abbr-alt` | `"am"`
+| `period/narrow`   | `"a"`
+| `zone`            | `"MST"`
+| `zone/ `          | `" MST"` or `""`
+| `offset`          | `"-0700"`
+| `offset/:`        | `"-07:00"`
 
 ## Installation
 
@@ -15,9 +159,26 @@ Install with:
 
     go install github.com/blackchip-org/ptime/cmd/ptime@latest
 
-## Examples
+## Command line
 
-    ptime -l en-US Mon Jan 2 2006 3:04:05pm MST
+A command line interface is provided for testing parsing and formatting.
+
+```
+Usage: ptime [options] field ...
+  -d	only parse date
+  -f layout
+    	format the result with layout
+  -l locale
+    	set locale (default "en-US")
+  -t	only parse time
+  -v	verbose
+```
+
+Examples:
+
+```bash
+ptime -l en-US Mon Jan 2 2006 3:04:05pm MST
+```
 
 Output:
 
@@ -38,7 +199,9 @@ Output:
 }
 ```
 
-    ptime -l fr-FR lundi, 2/1/06 15:04:05,9999
+```bash
+ptime -l fr-FR lundi, 2/1/06 15:04:05,9999
+```
 
 Output:
 
@@ -57,48 +220,49 @@ Output:
 }
 ```
 
-The only locales pre-configured at the moment are
-[en-US](https://github.com/blackchip-org/ptime/blob/main/locale/en.go) and
-[fr-FR](https://github.com/blackchip-org/ptime/blob/main/locale/fr.go). The
-[CLDR](https://cldr.unicode.org/) may be included at some point.
+```bash
+ptime -f "[day] [month/abbr] [year/2]" 2006-01-02
+```
 
-Supported layouts are shown in the tests here:
+Output:
 
-https://github.com/blackchip-org/ptime/blob/main/parser_test.go
+```
+2 Jan 06
+```
 
-The behavior of other layouts is undefined. Use the `-v` option on the
-command line to get insight into the parsing process.
-
-Code example:
+## Code Example
 
 ```go
 package main
 
 import (
-    "fmt"
-    "log"
-    "time"
+	"fmt"
+	"log"
+	"time"
 
-    "github.com/blackchip-org/ptime"
-    "github.com/blackchip-org/ptime/locale"
+	"github.com/blackchip-org/ptime"
+	"github.com/blackchip-org/ptime/locale"
 )
 
 func main() {
-    p, err := ptime.Parse(locale.EnUS, "3:04:05pm MST")
-    if err != nil {
-        log.Panic(err)
-    }
-    t, err := ptime.Time(p, time.Now())
-    if err != nil {
-        log.Panic(err)
-    }
-    fmt.Println(t)
+	p, err := ptime.Parse(locale.EnUS, "3:04:05pm MST")
+	if err != nil {
+		log.Panic(err)
+	}
+	t, err := ptime.Time(p, time.Now())
+	if err != nil {
+		log.Panic(err)
+	}
+	f := ptime.Format(locale.EnUS, "[hour]:[minute]:[second] [offset]", t)
+	fmt.Println(f)
 }
 ```
 
-Example output:
+Output:
 
-    2023-02-17 15:04:05 -0700 MST
+```
+15:04:05 -0700
+```
 
 Also found here:
 

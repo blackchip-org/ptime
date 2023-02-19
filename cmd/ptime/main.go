@@ -23,8 +23,8 @@ var (
 func main() {
 	log.SetFlags(0)
 	flag.BoolVar(&dateOnly, "d", false, "only parse date")
-	flag.StringVar(&format, "f", "", "format the result")
-	flag.StringVar(&localeName, "l", "en-US", "set locale")
+	flag.StringVar(&format, "f", "", "format the result with `layout`")
+	flag.StringVar(&localeName, "l", "en-US", "set `locale`")
 	flag.BoolVar(&timeOnly, "t", false, "only parse time")
 	flag.BoolVar(&verbose, "v", false, "verbose")
 

@@ -18,5 +18,6 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	fmt.Println(t)
+	f := ptime.Format(locale.EnUS, "[hour]:[minute]:[second] [offset]", t)
+	fmt.Println(f)
 }

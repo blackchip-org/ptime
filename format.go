@@ -106,7 +106,7 @@ func formatYear(loc *locale.Locale, format string, t time.Time) string {
 
 func formatMonth(loc *locale.Locale, format string, t time.Time) string {
 	switch format {
-	case "", "name":
+	case "":
 		return strconv.Itoa(int(t.Month()))
 	case "2":
 		return fmt.Sprintf("%2d", int(t.Month()))
@@ -114,7 +114,7 @@ func formatMonth(loc *locale.Locale, format string, t time.Time) string {
 		return fmt.Sprintf("%02d", int(t.Month()))
 	case "abbr":
 		return loc.MonthNamesAbbr[int(t.Month())-1]
-	case "wide":
+	case "wide", "name":
 		return loc.MonthNamesWide[int(t.Month())-1]
 	}
 	return badFormat
