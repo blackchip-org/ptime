@@ -175,6 +175,30 @@ func TestParserEnUS(t *testing.T) {
 			Offset:  "-0500",
 			TimeSep: ":",
 		}},
+		{"time", "3:04am EST -0500", Parsed{
+			Hour:    "3",
+			Minute:  "04",
+			Period:  "AM",
+			Zone:    "EST",
+			Offset:  "-0500",
+			TimeSep: ":",
+		}},
+		{"time", "3:04am +0000 UTC", Parsed{
+			Hour:    "3",
+			Minute:  "04",
+			Period:  "AM",
+			Zone:    "UTC",
+			Offset:  "+0000",
+			TimeSep: ":",
+		}},
+		{"time", "17:30:25 UTC +0000", Parsed{
+			Hour:    "17",
+			Minute:  "30",
+			Second:  "25",
+			Zone:    "UTC",
+			Offset:  "+0000",
+			TimeSep: ":",
+		}},
 
 		{"parse", "Mon Jan 2 2006 15:04:05 MST", Parsed{
 			Weekday: "Mon",

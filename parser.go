@@ -207,7 +207,6 @@ func (p *Parser) parseText() error {
 			p.trace("is UTC")
 			p.parsed.Zone = p.tok.Val
 			p.parsed.Offset = "+0000"
-			p.changeState(done)
 			return nil
 		}
 	}

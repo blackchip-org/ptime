@@ -10,16 +10,18 @@ import (
 )
 
 var formatTable = map[string]func(*locale.Locale, string, time.Time) string{
-	"weekday": formatWeekday,
-	"year":    formatYear,
-	"month":   formatMonth,
-	"day":     formatDay,
-	"hour":    formatHour,
-	"minute":  formatMinute,
-	"second":  formatSecond,
-	"period":  formatPeriod,
-	"zone":    formatZone,
-	"offset":  formatOffset,
+	"weekday":     formatWeekday,
+	"year":        formatYear,
+	"month":       formatMonth,
+	"day":         formatDay,
+	"hour":        formatHour,
+	"minute":      formatMinute,
+	"second":      formatSecond,
+	"period":      formatPeriod,
+	"zone":        formatZone,
+	"offset":      formatOffset,
+	"zone-offset": formatZoneOffset,
+	"offset-zone": formatOffsetZone,
 }
 
 const (
@@ -221,4 +223,22 @@ func formatOffset(loc *locale.Locale, format string, t time.Time) string {
 		return fmt.Sprintf("%v%02d:%02d", sign, h, m)
 	}
 	return badFormat
+}
+
+func formatZoneOffset(loc *locale.Locale, format string, t time.Time) string {
+	zone := formatZone(loc, "", t)
+	offset := formatOffset(loc, format, t)
+	if o, ok := loc.Offsets[zone]; ok && o == 0 {
+		return zone
+	}
+	return zone + " " + offset
+}
+
+func formatOffsetZone(loc *locale.Locale, format string, t time.Time) string {
+	zone := formatZone(loc, "", t)
+	offset := formatOffset(loc, format, t)
+	if o, ok := loc.Offsets[zone]; ok && o == 0 {
+		return zone
+	}
+	return offset + " " + zone
 }

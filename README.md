@@ -152,6 +152,9 @@ The available fields and formats are as follows:
 | `zone/ `          | `" MST"` or `""`
 | `offset`          | `"-0700"`
 | `offset/:`        | `"-07:00"`
+| `zone-offset`     | `"MST -0700"` or `"UTC"`
+| `zone-offset/:`   | `"MST -07:00"` or `"UTC"`
+
 
 ## Installation
 

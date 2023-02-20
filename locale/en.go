@@ -73,6 +73,7 @@ var EnUSZonesShort = map[string]string{
 	"CDT": "-0500",
 	"MDT": "-0600",
 	"PDT": "-0700",
+	"UTC": "+0000",
 }
 
 var EnUS = MustNew(Def{

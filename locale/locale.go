@@ -2,6 +2,7 @@ package locale
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -54,7 +55,7 @@ type Locale struct {
 	MonthNum  map[string]int
 	DayNum    map[string]int
 	PeriodNum map[string]int
-	Offsets   map[string]string
+	Offsets   map[string]int
 }
 
 func New(def Def) (*Locale, error) {
@@ -63,7 +64,7 @@ func New(def Def) (*Locale, error) {
 		MonthNum:  make(map[string]int),
 		DayNum:    make(map[string]int),
 		PeriodNum: make(map[string]int),
-		Offsets:   make(map[string]string),
+		Offsets:   make(map[string]int),
 	}
 
 	if len(def.MonthNamesAbbr) != 12 {
@@ -112,8 +113,36 @@ func New(def Def) (*Locale, error) {
 	}
 
 	for z, offset := range def.ZoneNamesShort {
+		runes := []rune(offset)
+		if len(runes) != 5 {
+			return nil, fmt.Errorf("invalid offset: %v", offset)
+		}
+
+		var sign int
+		switch runes[0] {
+		case '+':
+			sign = 1
+		case '-':
+			sign = -1
+		default:
+			return nil, fmt.Errorf("invalid offset: %v", offset)
+		}
+
+		hrs, err := strconv.Atoi(string(runes[1:3]))
+		if err != nil {
+			return nil, fmt.Errorf("invalid offset: %v", offset)
+		}
+		min, err := strconv.Atoi(string(runes[3:5]))
+		if err != nil {
+			return nil, fmt.Errorf("invalid offset: %v", offset)
+		}
+		offset := sign*hrs*3600 + min*60
 		l.Offsets[z] = offset
 		l.Offsets[strings.ToLower(z)] = offset
+	}
+	for _, flag := range l.UTCFlags {
+		l.Offsets[flag] = 0
+		l.Offsets[strings.ToLower(flag)] = 0
 	}
 
 	return l, nil

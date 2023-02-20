@@ -89,6 +89,37 @@ func TestFormat(t *testing.T) {
 			"17:30:25 MST -0700",
 		},
 		{
+			"17:30:25 MST -0700",
+			"[hour]:[minute]:[second] [zone-offset]",
+			"17:30:25 MST -0700",
+		},
+		{
+			"17:30:25 UTC +0000",
+			"[hour]:[minute]:[second] [zone-offset]",
+			"17:30:25 UTC",
+		},
+		{
+			"17:30:25 MST -0700",
+			"[hour]:[minute]:[second] [zone-offset/:]",
+			"17:30:25 MST -07:00",
+		},
+		{
+			"17:30:25 UTC +0000",
+			"[hour]:[minute]:[second] [zone-offset/:]",
+			"17:30:25 UTC",
+		},
+		{
+			"17:30:25 MST -0700",
+			"[hour]:[minute]:[second] [offset-zone]",
+			"17:30:25 -0700 MST",
+		},
+		{
+			"17:30:25 UTC +0000",
+			"[hour]:[minute]:[second] [offset-zone]",
+			"17:30:25 UTC",
+		},
+
+		{
 			"17:30:25",
 			"[hour/12]:[minute][period]",
 			"5:30PM",
