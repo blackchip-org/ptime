@@ -201,21 +201,12 @@ func formatZone(loc *locale.Locale, format string, t time.Time) string {
 
 func formatOffset(loc *locale.Locale, format string, t time.Time) string {
 	_, offset := t.Zone()
-	sign := "+"
-	if offset < 0 {
-		sign = "-"
-	}
-	h := offset / 3600
-	if h < 0 {
-		h = h * -1
-	}
-	m := offset / 60 % 60
 
 	switch format {
 	case "":
-		return fmt.Sprintf("%v%02d%02d", sign, h, m)
+		return FormatOffset(offset, "")
 	case ":":
-		return fmt.Sprintf("%v%02d:%02d", sign, h, m)
+		return FormatOffset(offset, ":")
 	}
 	return badFormat
 }

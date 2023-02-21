@@ -200,11 +200,15 @@ func (p *Parser) parseText() error {
 	}
 	if p.state == parsingZone {
 		p.trace("is zone")
-		p.parsed.Zone = p.tok.Val
-		offset, ok := p.loc.ZoneNamesShort[p.tok.Val]
+		var offset string
+		var ok bool
+
+		offset, ok = p.loc.ZoneNamesShort[p.tok.Val]
 		if !ok {
-			return p.err("unknown zone: %v", p.tok.Val)
+			p.trace("zone not recognized")
+			return nil
 		}
+		p.parsed.Zone = p.tok.Val
 		if p.parsed.Offset != "" && p.parsed.Offset != offset {
 			return p.err("time zone '%v' does not match given offset '%v'", p.tok.Val, p.parsed.Offset)
 		}
