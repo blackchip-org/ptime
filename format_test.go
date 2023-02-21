@@ -7,7 +7,7 @@ import (
 	"github.com/blackchip-org/ptime/locale"
 )
 
-func TestFormat(t *testing.T) {
+func TestFormatEnUS(t *testing.T) {
 	tests := []struct {
 		in     string
 		layout string
@@ -72,21 +72,6 @@ func TestFormat(t *testing.T) {
 			"2016-05-06",
 			"[weekday/abbr], [month/abbr] [day] [year/2]",
 			"Fri, May 6 16",
-		},
-		{
-			"17:30:25 EST",
-			"[hour]:[minute]:[second][zone/ ] [offset]",
-			"17:30:25 EST -0500",
-		},
-		{
-			"17:30:25 -0600",
-			"[hour]:[minute]:[second][zone/ ] [offset]",
-			"17:30:25 -0600",
-		},
-		{
-			"17:30:25 MST -0700",
-			"[hour]:[minute]:[second][zone/ ] [offset]",
-			"17:30:25 MST -0700",
 		},
 		{
 			"17:30:25 MST -0700",
@@ -160,19 +145,70 @@ func TestFormat(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to load location: %v", err)
 	}
-
 	now := time.Date(2006, 01, 02, 15, 04, 05, 0, l)
+
+	p := ForLocale(locale.EnUS)
 	for _, test := range tests {
 		t.Run(test.layout, func(t *testing.T) {
-			p, err := Parse(locale.EnUS, test.in)
+			parsed, err := p.Parse(test.in)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			pt, err := Time(p, now)
+			pt, err := p.Time(parsed, now)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			out := Format(locale.EnUS, test.layout, pt)
+			out := p.Format(test.layout, pt)
+			if out != test.out {
+				t.Errorf("\n have: %v \n want: %v", out, test.out)
+			}
+		})
+	}
+}
+
+func TestFormatFrFR(t *testing.T) {
+	tests := []struct {
+		in     string
+		layout string
+		out    string
+	}{
+		{
+			"2016-11-22",
+			"[day] [month/abbr] [year]",
+			"22 nov. 2016",
+		},
+		{
+			"2016-11-22",
+			"[day] [month/name] [year]",
+			"22 novembre 2016",
+		},
+		{
+			"2016-01-02",
+			"[weekday], [day]/[month]",
+			"samedi, 2/1",
+		},
+		{
+			"2016-01-02",
+			"[weekday/abbr] [day]/[month]",
+			"sam. 2/1",
+		},
+	}
+
+	l := time.UTC
+	now := time.Date(2006, 01, 02, 15, 04, 05, 0, l)
+
+	p := ForLocale(locale.FrFR)
+	for _, test := range tests {
+		t.Run(test.layout, func(t *testing.T) {
+			parsed, err := p.Parse(test.in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			pt, err := p.Time(parsed, now)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			out := p.Format(test.layout, pt)
 			if out != test.out {
 				t.Errorf("\n have: %v \n want: %v", out, test.out)
 			}

@@ -195,11 +195,6 @@ func formatZone(loc *locale.Locale, format string, t time.Time) string {
 	switch format {
 	case "":
 		return zone
-	case " ":
-		if zone != "" {
-			return " " + zone
-		}
-		return ""
 	}
 	return badFormat
 }
@@ -228,7 +223,7 @@ func formatOffset(loc *locale.Locale, format string, t time.Time) string {
 func formatZoneOffset(loc *locale.Locale, format string, t time.Time) string {
 	zone := formatZone(loc, "", t)
 	offset := formatOffset(loc, format, t)
-	if o, ok := loc.Offsets[zone]; ok && o == 0 {
+	if o, ok := loc.Offsets[loc.Key(zone)]; ok && o == 0 {
 		return zone
 	}
 	return zone + " " + offset
@@ -237,7 +232,7 @@ func formatZoneOffset(loc *locale.Locale, format string, t time.Time) string {
 func formatOffsetZone(loc *locale.Locale, format string, t time.Time) string {
 	zone := formatZone(loc, "", t)
 	offset := formatOffset(loc, format, t)
-	if o, ok := loc.Offsets[zone]; ok && o == 0 {
+	if o, ok := loc.Offsets[loc.Key(zone)]; ok && o == 0 {
 		return zone
 	}
 	return offset + " " + zone

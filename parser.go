@@ -137,28 +137,16 @@ func (p *Parser) Parse(text string) (Parsed, error) {
 	return p.parse(text)
 }
 
-func Parse(l *locale.Locale, text string) (Parsed, error) {
-	return NewParser(l).Parse(text)
-}
-
 func (p *Parser) ParseDate(text string) (Parsed, error) {
 	p.state = parsingDate
 	p.parseOne = true
 	return p.parse(text)
 }
 
-func ParseDate(l *locale.Locale, text string) (Parsed, error) {
-	return NewParser(l).ParseDate(text)
-}
-
 func (p *Parser) ParseTime(text string) (Parsed, error) {
 	p.state = parsingTime
 	p.parseOne = true
 	return p.parse(text)
-}
-
-func ParseTime(l *locale.Locale, text string) (Parsed, error) {
-	return NewParser(l).ParseTime(text)
 }
 
 func (p *Parser) parseText() error {
@@ -334,7 +322,6 @@ func (p *Parser) parseDate() error {
 		la2 := p.lookahead(2)
 		_, la2IsMonth := lookupMonth(p.loc, la2.Val)
 
-		//p.trace("lookahead: %v", la.Val)
 		switch {
 		case delim == "-" && la2IsMonth:
 			p.dateOrder = dayMonthYearOrder
@@ -620,25 +607,25 @@ func inSet(text string, domain []string) bool {
 }
 
 func lookupMonth(l *locale.Locale, text string) (string, bool) {
-	n, ok := l.MonthNum[text]
+	n, ok := l.MonthNum[l.Key(text)]
 	if !ok {
 		return "", false
 	}
-	return locale.EnMonthNamesAbbr[n-1], true
+	return l.MonthNamesAbbr[n-1], true
 }
 
 func lookupDay(l *locale.Locale, text string) (string, bool) {
-	n, ok := l.DayNum[text]
+	n, ok := l.DayNum[l.Key(text)]
 	if !ok {
 		return "", false
 	}
-	return locale.EnDayNamesAbbr[n], true
+	return l.DayNamesAbbr[n], true
 }
 
 func lookupPeriod(l *locale.Locale, text string) (string, bool) {
-	n, ok := l.PeriodNum[text]
+	n, ok := l.PeriodNum[l.Key(text)]
 	if !ok {
 		return "", false
 	}
-	return locale.EnPeriodNamesAbbr[n][0], true
+	return l.PeriodNamesAbbr[n][0], true
 }

@@ -18,12 +18,27 @@ parsed correctly. This library is not appropriate for parsing in bulk with no
 supervision or when there needs to be a 100% guarantee that the parsing is
 correct.
 
+## Locales
+
 A locale is necessary for parsing. The only locales pre-configured at the moment
 are [en-US](https://github.com/blackchip-org/ptime/blob/main/locale/en.go) and
 [fr-FR](https://github.com/blackchip-org/ptime/blob/main/locale/fr.go). The
 [CLDR](https://cldr.unicode.org/) may be included at some point. In the mean
 time, structures can be constructed manually with the needed locale
 information.
+
+Create a `ptime.P` structure with a locale:
+
+```go
+p := ptime.ForLocale(locale.EnUS)
+parsed, err := p.Parse("2006-01-02")
+```
+
+or call each function with a locale:
+
+```go
+parsed, err := ptime.Parse(locale.EnUS, "2006-01-02")
+```
 
 ## Parsing
 
@@ -45,20 +60,38 @@ returns this structure:
 }
 ```
 
-Names are normalized to an abbreviated format in the en-US locale. For example,
-Monday and lundi would both be normalized to Mon. For example:
+Names are normalized to an abbreviated format. For example:
 
 ```go
-ptime.Parse(locale.FrFR, "mardi, 18 avril")
+ptime.Parse("Friday, April 15 2014")
+```
+
+results this:
+
+```json
+{
+  "Weekday": "Fri",
+  "Year": "2014",
+  "Month": "Apr",
+  "Day": "15",
+  "DateSep": " "
+}
+```
+
+and:
+
+```go
+ptime.Parse(locale.FrFR, "vendredi, 15 avril 2014")
 ```
 
 returns this:
 
 ```json
 {
-  "Weekday": "Tue",
-  "Month": "Apr",
-  "Day": "18",
+  "Weekday": "ven.",
+  "Year": "2014",
+  "Month": "avr.",
+  "Day": "15",
   "DateSep": " "
 }
 ```
@@ -149,9 +182,10 @@ The available fields and formats are as follows:
 | `period/abbr-alt` | `"am"`
 | `period/narrow`   | `"a"`
 | `zone`            | `"MST"`
-| `zone/ `          | `" MST"` or `""`
 | `offset`          | `"-0700"`
 | `offset/:`        | `"-07:00"`
+| `offset-zone`     | `"-0700 MST"` or `"UTC"`
+| `offset-zone/:`   | `"-07:00 MST"` or `"UTC"`
 | `zone-offset`     | `"MST -0700"` or `"UTC"`
 | `zone-offset/:`   | `"MST -07:00"` or `"UTC"`
 
@@ -214,7 +248,7 @@ Output:
 
 ```json
 {
-  "Weekday": "Mon",
+  "Weekday": "lun.",
   "Year": "06",
   "Month": "1",
   "Day": "2",
@@ -254,15 +288,17 @@ import (
 )
 
 func main() {
-	p, err := ptime.Parse(locale.EnUS, "3:04:05pm MST")
+	p := ptime.ForLocale(locale.EnUS)
+
+	parsed, err := p.Parse("3:04:05pm MST")
 	if err != nil {
 		log.Panic(err)
 	}
-	t, err := ptime.Time(p, time.Now())
+	t, err := p.Time(parsed, time.Now())
 	if err != nil {
 		log.Panic(err)
 	}
-	f := ptime.Format(locale.EnUS, "[hour]:[minute]:[second] [offset]", t)
+	f := p.Format("[hour]:[minute]:[second] [offset]", t)
 	fmt.Println(f)
 }
 ```

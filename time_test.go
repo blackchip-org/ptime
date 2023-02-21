@@ -3,9 +3,11 @@ package ptime
 import (
 	"testing"
 	"time"
+
+	"github.com/blackchip-org/ptime/locale"
 )
 
-func TestTime(t *testing.T) {
+func TestTimeEnUS(t *testing.T) {
 	nowZ := time.FixedZone("MST", -7*3600)
 	estZ := time.FixedZone("EST", -5*3600)
 	now := time.Date(2006, 01, 02, 15, 04, 05, 00, nowZ)
@@ -74,7 +76,41 @@ func TestTime(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			tt, err := Time(test.parsed, now)
+			tt, err := Time(locale.EnUS, test.parsed, now)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if !tt.Equal(test.time) {
+				t.Errorf("\n have: %v \n want: %v", tt, test.time)
+			}
+		})
+	}
+}
+
+func TestTimeFrFR(t *testing.T) {
+	nowZ := time.UTC
+	now := time.Date(2006, 01, 02, 15, 04, 05, 00, nowZ)
+
+	tests := []struct {
+		name   string
+		parsed Parsed
+		time   time.Time
+	}{
+		{
+			"2 janvier 2016",
+			Parsed{Year: "2016", Month: "janvier", Day: "2"},
+			time.Date(2016, 1, 2, 0, 0, 0, 0, nowZ),
+		},
+		{
+			"2 janv. 2016",
+			Parsed{Year: "2016", Month: "janv.", Day: "2"},
+			time.Date(2016, 1, 2, 0, 0, 0, 0, nowZ),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			tt, err := Time(locale.FrFR, test.parsed, now)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

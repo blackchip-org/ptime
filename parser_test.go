@@ -403,14 +403,14 @@ func TestParserFrFR(t *testing.T) {
 			DateSep: "/",
 		}},
 		{"date", "2 janv. 2006", Parsed{
-			Month:   "Jan",
+			Month:   "janv.",
 			Day:     "2",
 			Year:    "2006",
 			DateSep: " ",
 		}},
 		{"date", "lundi, 2 janvier", Parsed{
-			Weekday: "Mon",
-			Month:   "Jan",
+			Weekday: "lun.",
+			Month:   "janv.",
 			Day:     "2",
 			DateSep: " ",
 		}},
@@ -434,7 +434,7 @@ func TestParserFrFR(t *testing.T) {
 		}},
 
 		{"parse", "lundi, 2/1/06 15:04:05,9999", Parsed{
-			Weekday:    "Mon",
+			Weekday:    "lun.",
 			Month:      "1",
 			Day:        "2",
 			Year:       "06",

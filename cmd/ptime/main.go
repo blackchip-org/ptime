@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/blackchip-org/ptime"
-	"github.com/blackchip-org/ptime/locale"
 )
 
 var (
@@ -31,14 +30,13 @@ func main() {
 	flag.Parse()
 
 	text := strings.Join(flag.Args(), " ")
-	l, ok := locale.Lookup(localeName)
-	if !ok {
-		log.Fatalf("locale '%v' not found", localeName)
+	p, err := ptime.ForLocaleName(localeName)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	p := ptime.NewParser(l)
 	if verbose {
-		p.Trace = true
+		p.Parser.Trace = true
 	}
 
 	var parseFn func(string) (ptime.Parsed, error)
@@ -56,11 +54,11 @@ func main() {
 	}
 
 	if format != "" {
-		t, err := ptime.Time(res, time.Now())
+		t, err := p.Time(res, time.Now())
 		if err != nil {
 			log.Fatalf("unexpected error: %v", err)
 		}
-		fmt.Println(ptime.Format(l, format, t))
+		fmt.Println(p.Format(format, t))
 	} else {
 		b, err := json.MarshalIndent(res, "", "  ")
 		if err != nil {

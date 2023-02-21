@@ -52,19 +52,21 @@ type Def struct {
 
 type Locale struct {
 	Def
-	MonthNum  map[string]int
-	DayNum    map[string]int
-	PeriodNum map[string]int
-	Offsets   map[string]int
+	MonthNum     map[string]int
+	DayNum       map[string]int
+	PeriodNum    map[string]int
+	Offsets      map[string]int
+	DisplayNames map[string]string
 }
 
 func New(def Def) (*Locale, error) {
 	l := &Locale{
-		Def:       def,
-		MonthNum:  make(map[string]int),
-		DayNum:    make(map[string]int),
-		PeriodNum: make(map[string]int),
-		Offsets:   make(map[string]int),
+		Def:          def,
+		MonthNum:     make(map[string]int),
+		DayNum:       make(map[string]int),
+		PeriodNum:    make(map[string]int),
+		Offsets:      make(map[string]int),
+		DisplayNames: make(map[string]string),
 	}
 
 	if len(def.MonthNamesAbbr) != 12 {
@@ -74,16 +76,15 @@ func New(def Def) (*Locale, error) {
 		return nil, fmt.Errorf("invalid number of month names (wide)")
 	}
 	for i := 0; i < 12; i++ {
-		l.MonthNum[def.MonthNamesAbbr[i]] = i + 1
-		l.MonthNum[def.MonthNamesWide[i]] = i + 1
-		l.MonthNum[strings.ToLower(def.MonthNamesAbbr[i])] = i + 1
-		l.MonthNum[strings.ToLower(def.MonthNamesWide[i])] = i + 1
-	}
-	// Probably need something better than this
-	for k, v := range l.MonthNum {
-		if strings.HasSuffix(k, ".") {
-			l.MonthNum[k[:len(k)-1]] = v
-		}
+		abbr := def.MonthNamesAbbr[i]
+		wide := def.MonthNamesWide[i]
+		abbrKey := l.Key(abbr)
+		wideKey := l.Key(wide)
+
+		l.MonthNum[abbrKey] = i + 1
+		l.MonthNum[wideKey] = i + 1
+		l.DisplayNames[abbrKey] = abbr
+		l.DisplayNames[wideKey] = wide
 	}
 
 	if len(def.DayNamesAbbr) != 7 {
@@ -93,26 +94,34 @@ func New(def Def) (*Locale, error) {
 		return nil, fmt.Errorf("invalid number of day names (wide)")
 	}
 	for i := 0; i < 7; i++ {
-		l.DayNum[def.DayNamesAbbr[i]] = i
-		l.DayNum[def.DayNamesWide[i]] = i
-		l.DayNum[strings.ToUpper(def.DayNamesAbbr[i])] = i
-		l.DayNum[strings.ToUpper(def.DayNamesWide[i])] = i
+		abbr := def.DayNamesAbbr[i]
+		wide := def.DayNamesWide[i]
+		abbrKey := l.Key(abbr)
+		wideKey := l.Key(wide)
+
+		l.DayNum[abbrKey] = i
+		l.DayNum[wideKey] = i
+		l.DisplayNames[abbrKey] = abbr
+		l.DisplayNames[wideKey] = wide
 	}
 
 	for i, names := range def.PeriodNamesAbbr {
-		for _, n := range names {
-			l.PeriodNum[n] = i
-			l.PeriodNum[strings.ToLower(n)] = i
+		for _, name := range names {
+			nameKey := l.Key(name)
+			l.PeriodNum[nameKey] = i
+			l.DisplayNames[nameKey] = name
 		}
 	}
 	for i, names := range def.PeriodNamesNarrow {
-		for _, n := range names {
-			l.PeriodNum[n] = i
-			l.PeriodNum[strings.ToLower(n)] = i
+		for _, name := range names {
+			nameKey := l.Key(name)
+			l.PeriodNum[nameKey] = i
+			l.DisplayNames[nameKey] = name
 		}
 	}
 
-	for z, offset := range def.ZoneNamesShort {
+	for zone, offset := range def.ZoneNamesShort {
+		zoneKey := l.Key(zone)
 		runes := []rune(offset)
 		if len(runes) != 5 {
 			return nil, fmt.Errorf("invalid offset: %v", offset)
@@ -137,15 +146,25 @@ func New(def Def) (*Locale, error) {
 			return nil, fmt.Errorf("invalid offset: %v", offset)
 		}
 		offset := sign*hrs*3600 + min*60
-		l.Offsets[z] = offset
-		l.Offsets[strings.ToLower(z)] = offset
+		l.Offsets[zoneKey] = offset
+		l.DisplayNames[zoneKey] = zone
 	}
 	for _, flag := range l.UTCFlags {
-		l.Offsets[flag] = 0
-		l.Offsets[strings.ToLower(flag)] = 0
+		flagKey := l.Key(flag)
+		l.Offsets[flagKey] = 0
+		l.DisplayNames[flagKey] = flag
 	}
 
+	// fmt.Println("** DISPLAY NAMES")
+	// for k, v := range l.DisplayNames {
+	// 	fmt.Printf("%v: %v\n", k, v)
+	// }
 	return l, nil
+}
+
+func (l *Locale) Key(v string) string {
+	v = strings.ReplaceAll(v, ".", "")
+	return strings.ToLower(v)
 }
 
 func MustNew(def Def) *Locale {

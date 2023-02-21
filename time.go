@@ -8,7 +8,7 @@ import (
 	"github.com/blackchip-org/ptime/locale"
 )
 
-func Time(p Parsed, now time.Time) (time.Time, error) {
+func Time(l *locale.Locale, p Parsed, now time.Time) (time.Time, error) {
 	var year, mon, day, hour, min, sec, nsec int
 	var loc *time.Location
 	var err error
@@ -26,7 +26,7 @@ func Time(p Parsed, now time.Time) (time.Time, error) {
 	}
 
 	if p.Month != "" {
-		m, ok := locale.EnUS.MonthNum[p.Month]
+		m, ok := l.MonthNum[l.Key(p.Month)]
 		if ok {
 			mon = m
 		}
@@ -67,7 +67,7 @@ func Time(p Parsed, now time.Time) (time.Time, error) {
 		}
 
 		if p.Period != "" {
-			num, ok := locale.EnUS.PeriodNum[p.Period]
+			num, ok := l.PeriodNum[l.Key(p.Period)]
 			if !ok {
 				return time.Time{}, fmt.Errorf("invalid period: %v", p.Period)
 			}

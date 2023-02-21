@@ -10,14 +10,16 @@ import (
 )
 
 func main() {
-	p, err := ptime.Parse(locale.EnUS, "3:04:05pm MST")
+	p := ptime.ForLocale(locale.EnUS)
+
+	parsed, err := p.Parse("3:04:05pm MST")
 	if err != nil {
 		log.Panic(err)
 	}
-	t, err := ptime.Time(p, time.Now())
+	t, err := p.Time(parsed, time.Now())
 	if err != nil {
 		log.Panic(err)
 	}
-	f := ptime.Format(locale.EnUS, "[hour]:[minute]:[second] [offset]", t)
+	f := p.Format("[hour]:[minute]:[second] [offset]", t)
 	fmt.Println(f)
 }
