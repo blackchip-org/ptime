@@ -111,11 +111,11 @@ A `time.Time` can be created from a `Parsed` structure given a reference
 time. For example:
 
 ```go
-p, err := ptime.Parse(locale.EnUS, "3:04:05pm MST")
+parsed, err := p.Parse("3:04:05pm MST")
 if err != nil {
     log.Panic(err)
 }
-t, err := ptime.Time(p, time.Now())
+t, err := ptime.Time(parsed, time.Now())
 ```
 
 In this case, we don't want the `time.Time` value to be in the year 0, so the
@@ -131,10 +131,10 @@ to 1900 or use an explicit 4 digit year.
 ## Formatting
 
 Use the `Format` function to format a `time.Time` with an alterative syntax to
-the one provided in the standard library. The function takes a locale, a
-layout, and the time to format. The contents of the layout are copied as-is and
-date/time fields denoted in square brackets are evaluated. For example, the
-following date:
+the one provided in the standard library. The function takes a layout and the
+time to format. The contents of the layout are copied as-is and date/time
+fields denoted in square brackets are evaluated. For example, the following
+date:
 
     2006-01-02
 
