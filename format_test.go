@@ -147,7 +147,7 @@ func TestFormatEnUS(t *testing.T) {
 	}
 	now := time.Date(2006, 01, 02, 15, 04, 05, 0, l)
 
-	p := ForLocale(locale.EnUS)
+	p := For(locale.EnUS)
 	for _, test := range tests {
 		t.Run(test.layout, func(t *testing.T) {
 			parsed, err := p.Parse(test.in)
@@ -197,7 +197,7 @@ func TestFormatFrFR(t *testing.T) {
 	l := time.UTC
 	now := time.Date(2006, 01, 02, 15, 04, 05, 0, l)
 
-	p := ForLocale(locale.FrFR)
+	p := For(locale.FrFR)
 	for _, test := range tests {
 		t.Run(test.layout, func(t *testing.T) {
 			parsed, err := p.Parse(test.in)

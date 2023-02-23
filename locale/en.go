@@ -89,5 +89,5 @@ var EnUS = MustNew(Def{
 	TimeSep:           []string{":"},
 	DecimalSep:        ".",
 	DateTimeSep:       []string{"T"},
-	UTCFlags:          []string{"UTC", "Z"},
+	UTCFlags:          []string{"Z"},
 })

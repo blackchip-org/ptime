@@ -155,10 +155,6 @@ func New(def Def) (*Locale, error) {
 		l.DisplayNames[flagKey] = flag
 	}
 
-	// fmt.Println("** DISPLAY NAMES")
-	// for k, v := range l.DisplayNames {
-	// 	fmt.Printf("%v: %v\n", k, v)
-	// }
 	return l, nil
 }
 

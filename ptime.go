@@ -12,19 +12,19 @@ type P struct {
 	Parser *Parser
 }
 
-func ForLocale(loc *locale.Locale) *P {
+func For(loc *locale.Locale) *P {
 	return &P{
 		Locale: loc,
 		Parser: NewParser(loc),
 	}
 }
 
-func ForLocaleName(name string) (*P, error) {
+func ForLocale(name string) (*P, error) {
 	loc, ok := locale.Lookup(name)
 	if !ok {
 		return nil, fmt.Errorf("unknown locale: %v", name)
 	}
-	return ForLocale(loc), nil
+	return For(loc), nil
 }
 
 func (p *P) Parse(text string) (Parsed, error) {

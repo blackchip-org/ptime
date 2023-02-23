@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	p := ptime.ForLocale(locale.EnUS)
+	p := ptime.For(locale.EnUS)
 
 	parsed, err := p.Parse("3:04:05pm MST")
 	if err != nil {

@@ -30,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	text := strings.Join(flag.Args(), " ")
-	p, err := ptime.ForLocaleName(localeName)
+	p, err := ptime.ForLocale(localeName)
 	if err != nil {
 		log.Fatal(err)
 	}

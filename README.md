@@ -30,7 +30,7 @@ information.
 Create a `ptime.P` structure with a locale:
 
 ```go
-p := ptime.ForLocale(locale.EnUS)
+p := ptime.For(locale.EnUS)
 parsed, err := p.Parse("2006-01-02")
 ```
 
@@ -63,7 +63,7 @@ returns this structure:
 Names are normalized to an abbreviated format. For example:
 
 ```go
-ptime.Parse("Friday, April 15 2014")
+ptime.Parse(locale.EnUS, "Friday, April 15 2014")
 ```
 
 results this:
